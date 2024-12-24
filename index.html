@@ -3,21 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>自动播放音乐示例</title>
+    <title>美化音频播放器</title>
     <!-- 引用外部 CSS 文件，并添加版本号 -->
     <link rel="stylesheet" href="styles.css?v=20241224">
+    <style>
+        /* 设置网页背景图片 */
+        body {
+            background-image: url('https://multimedia.nt.qq.com.cn/download?appid=1406&fileid=EhSG-I_IHHsgcDNeXrK2rtJrjMwwexis2gsg_goohPHU293AigMyBHByb2RQgLsvWhDy3XqFduMOflEi7s2R3_he&spec=0&rkey=CAMSKLgthq-6lGU_oSJRaJ62MSDawECTjIm9IeSLqoPc1xyRzdoSOVWAjZ0'); /* 替换成你的背景图片链接 */
+            background-size: cover; /* 图片覆盖整个屏幕 */
+            background-position: center; /* 图片居中显示 */
+            background-attachment: fixed; /* 背景固定，滚动时不会移动 */
+            height: 100vh; /* 让背景覆盖整个视口高度 */
+            margin: 0; /* 去除默认的页面边距 */
+            color: white; /* 设置字体颜色为白色 */
+            font-family: Arial, sans-serif; /* 设置字体 */
+            text-align: center; /* 让文字居中 */
+        }
+
+        h1, p {
+            margin-top: 20px;
+        }
+
+        /* 音频播放器容器 */
+        .audio-player {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+
+        /* 隐藏原始音频控件 */
+        audio {
+            width: 100%;
+            height: 50px;
+            background-color: transparent;
+            border: none;
+        }
+
+        /* 自定义播放按钮 */
+        .play-button {
+            background-color: #ff6347;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .play-button:hover {
+            background-color: #ff4500;
+        }
+
+        /* 文字样式 */
+        h1 {
+            font-size: 2rem;
+            margin-top: 50px;
+        }
+
+        p {
+            font-size: 1.2rem;
+        }
+    </style>
 </head>
 <body>
-    <h1>你好</h1>
+    <h1>你好，欢迎来到我的网站！</h1>
     <p>张睿康真帅</p >
 
-    <!-- 自动播放音乐 -->
-    <audio controls autoplay loop>
-        <source src="http://music.163.com/song/media/outer/url?id=5257138.mp3" type="audio/mpeg">
-        您的浏览器不支持音频播放。
-    </audio>
+    <!-- 音频播放器容器 -->
+    <div class="audio-player">
+        <!-- 音频播放 -->
+        <audio id="audio" loop>
+            <source src="http://music.163.com/song/media/outer/url?id=5257138.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放。
+        </audio>
+        <!-- 自定义播放按钮 -->
+        <button class="play-button" onclick="togglePlay()">播放</button>
+    </div>
 
     <!-- 引用外部 JS 文件，并添加版本号 -->
-    <script src="script.js?v=1.2.3"></script>
+    <script src="script.js?v=1.2.5"></script>
+
+    <script>
+        // 播放/暂停切换功能
+        function togglePlay() {
+            const audio = document.getElementById('audio');
+            const button = document.querySelector('.play-button');
+
+            if (audio.paused) {
+                audio.play();
+                button.textContent = '暂停'; // 更新按钮文本
+            } else {
+                audio.pause();
+                button.textContent = '播放'; // 更新按钮文本
+            }
+        }
+    </script>
 </body>
 </html>
