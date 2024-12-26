@@ -3,133 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>合成大西瓜</title>
+    <title>手机端特效展示</title>
     <style>
+        /* 页面基础样式 */
         body {
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #6e7dff, #4a90e2);
             font-family: 'Arial', sans-serif;
+            background: #111;
             color: #fff;
             overflow: hidden;
         }
-        #gameCanvas {
-            display: block;
-            margin: 0 auto;
-            background-color: #fff;
-            border-radius: 15px;
-        }
-        .message {
-            text-align: center;
-            font-size: 24px;
-            margin-top: 20px;
-            color: #fff;
+
+        /* 背景渐变效果 */
+        .background {
             position: absolute;
-            top: 10%;
-            left: 50%;
-            transform: translateX(-50%);
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            animation: gradientShift 5s infinite alternate;
+            z-index: -1;
+        }
+
+        /* 渐变背景动画 */
+        @keyframes gradientShift {
+            0% {
+                background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            }
+            50% {
+                background: linear-gradient(135deg, #6a11cb, #2575fc);
+            }
+            100% {
+                background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            }
+        }
+
+        /* 标题动画 */
+        h1 {
+            font-size: 4em;
+            text-align: center;
+            margin-top: 20%;
+            background-image: linear-gradient(to left, #ff7e5f, #feb47b);
+            background-clip: text;
+            color: transparent;
+            animation: textGlow 3s ease-in-out infinite alternate;
+        }
+
+        /* 文字发光动画 */
+        @keyframes textGlow {
+            0% {
+                text-shadow: 0 0 5px #ff7e5f, 0 0 10px #ff7e5f, 0 0 15px #ff7e5f;
+            }
+            100% {
+                text-shadow: 0 0 10px #feb47b, 0 0 20px #feb47b, 0 0 30px #feb47b;
+            }
+        }
+
+        /* 按钮样式和悬停效果 */
+        .btn {
+            display: block;
+            width: 200px;
+            margin: 30px auto;
+            padding: 15px;
+            font-size: 1.2em;
+            text-align: center;
+            background-color: transparent;
+            border: 2px solid #feb47b;
+            color: #feb47b;
+            border-radius: 50px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #feb47b;
+            color: #111;
+            transform: scale(1.1);
+        }
+
+        /* 圆形波浪按钮点击特效 */
+        .btn:active {
+            transform: scale(1);
+            animation: ripple 0.6s ease;
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* 内容区域的卡片效果 */
+        .content-card {
+            width: 80%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 165, 0, 0.3);
+            text-align: center;
+            animation: fadeIn 2s ease-out;
+        }
+
+        /* 渐显动画 */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .content-card h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #feb47b;
+        }
+
+        .content-card p {
+            font-size: 1.2em;
+            color: #fff;
+            line-height: 1.6;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3em;
+            }
+
+            .btn {
+                width: 150px;
+                padding: 12px;
+                font-size: 1em;
+            }
+
+            .content-card h2 {
+                font-size: 2em;
+            }
+
+            .content-card p {
+                font-size: 1em;
+            }
         }
     </style>
 </head>
 <body>
 
-<canvas id="gameCanvas"></canvas>
-<div class="message" id="gameMessage">合成大西瓜！</div>
+    <!-- 渐变背景 -->
+    <div class="background"></div>
 
-<!-- 版本号添加到JavaScript文件 -->
-<script src="game.js?v=1.1"></script>  <!-- 修改版本号为1.1，确保浏览器加载新文件 -->
+    <!-- 标题 -->
+    <h1>欢迎来到特效展示</h1>
 
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    <!-- 内容卡片 -->
+    <div class="content-card">
+        <h2>我们的目标</h2>
+        <p>通过视觉效果和互动，提升网站的吸引力并为用户带来愉悦的体验。</p>
+    </div>
 
-    // 设置画布大小
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    <!-- 按钮 -->
+    <button class="btn">点击这里</button>
 
-    // 水果数据
-    const fruits = [
-        { name: '小西瓜', size: 50, color: '#1abc9c', x: 100, y: 100, level: 1 },
-        { name: '小西瓜', size: 50, color: '#1abc9c', x: 200, y: 100, level: 1 },
-    ];
-
-    let score = 0;
-    let gameOver = false;
-
-    // 绘制水果
-    function drawFruits() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (const fruit of fruits) {
-            ctx.beginPath();
-            ctx.arc(fruit.x, fruit.y, fruit.size, 0, Math.PI * 2);
-            ctx.fillStyle = fruit.color;
-            ctx.fill();
-            ctx.closePath();
-        }
-    }
-
-    // 合成水果
-    function mergeFruits() {
-        const newFruits = [];
-        for (let i = 0; i < fruits.length; i++) {
-            for (let j = i + 1; j < fruits.length; j++) {
-                if (fruits[i].level === fruits[j].level && fruits[i].level < 3) {
-                    // 合成两个相同等级的水果
-                    newFruits.push({
-                        name: `合成${fruits[i].level + 1}`,
-                        size: fruits[i].size + 25,
-                        color: fruits[i].level === 1 ? '#2ecc71' : '#16a085',
-                        x: (fruits[i].x + fruits[j].x) / 2,
-                        y: (fruits[i].y + fruits[j].y) / 2,
-                        level: fruits[i].level + 1,
-                    });
-                    fruits.splice(j, 1); // 移除第二个水果
-                    fruits.splice(i, 1); // 移除第一个水果
-                    i--; // 调整索引以便继续检查合成
-                    break;
-                }
-            }
-        }
-        fruits.push(...newFruits);
-    }
-
-    // 触摸事件
-    canvas.addEventListener('touchstart', (event) => {
-        if (gameOver) return;
-
-        const clickX = event.touches[0].clientX;
-        const clickY = event.touches[0].clientY;
-
-        for (const fruit of fruits) {
-            const distance = Math.sqrt(Math.pow(fruit.x - clickX, 2) + Math.pow(fruit.y - clickY, 2));
-            if (distance < fruit.size) {
-                // 模拟点击后水果位置的改变
-                fruit.x += 20;
-                fruit.y += 20;
-                break;
-            }
-        }
-    });
-
-    // 游戏主循环
-    function gameLoop() {
-        if (gameOver) return;
-
-        mergeFruits(); // 每一帧尝试合成水果
-        drawFruits();
-
-        // 如果有大西瓜，就游戏胜利
-        if (fruits.some(fruit => fruit.level === 3)) {
-            document.getElementById('gameMessage').textContent = "你赢了！合成了大西瓜！";
-            gameOver = true;
-            return;
-        }
-
-        requestAnimationFrame(gameLoop);
-    }
-
-    // 初始化游戏
-    gameLoop();
-</script>
+    <!-- 版本控制：动态添加当前时间戳作为版本号 -->
+    <script>
+        var timestamp = new Date().getTime();  // 获取当前时间戳
+        var script = document.createElement('script');
+        script.src = "script.js?v=" + timestamp;  // 将时间戳作为查询参数添加到脚本文件
+        document.body.appendChild(script);
+    </script>
 </body>
 </html>
