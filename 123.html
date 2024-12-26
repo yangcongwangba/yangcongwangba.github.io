@@ -3,185 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手机端特效展示</title>
+    <title>炫酷科幻动画展示</title>
+
+    <!-- 动态添加版本号 -->
+    <link id="dynamic-css" rel="stylesheet" href="style.css?v=<script>document.write(new Date().getTime());</script>">
+    
     <style>
         /* 页面基础样式 */
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Arial', sans-serif;
-            background: #111;
+            background: #1a1a1a;
             color: #fff;
+            font-family: 'Arial', sans-serif;
             overflow: hidden;
+            height: 100vh;
         }
 
         /* 背景渐变效果 */
         .background {
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #ff7e5f, #feb47b);
-            animation: gradientShift 5s infinite alternate;
+            background: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,45,55,1) 100%);
+            animation: gradientShift 10s infinite alternate;
             z-index: -1;
         }
 
-        /* 渐变背景动画 */
+        /* 背景渐变动画 */
         @keyframes gradientShift {
             0% {
-                background: linear-gradient(135deg, #ff7e5f, #feb47b);
+                background: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,45,55,1) 100%);
             }
             50% {
-                background: linear-gradient(135deg, #6a11cb, #2575fc);
+                background: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(55,0,65,1) 100%);
             }
             100% {
-                background: linear-gradient(135deg, #ff7e5f, #feb47b);
+                background: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,45,55,1) 100%);
             }
         }
 
-        /* 标题动画 */
-        h1 {
+        /* 3D 旋转文字 */
+        .title {
             font-size: 4em;
             text-align: center;
-            margin-top: 20%;
-            background-image: linear-gradient(to left, #ff7e5f, #feb47b);
-            background-clip: text;
-            color: transparent;
-            animation: textGlow 3s ease-in-out infinite alternate;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            animation: rotateText 5s linear infinite;
         }
 
-        /* 文字发光动画 */
-        @keyframes textGlow {
+        @keyframes rotateText {
             0% {
-                text-shadow: 0 0 5px #ff7e5f, 0 0 10px #ff7e5f, 0 0 15px #ff7e5f;
+                transform: rotateY(0deg);
             }
             100% {
-                text-shadow: 0 0 10px #feb47b, 0 0 20px #feb47b, 0 0 30px #feb47b;
+                transform: rotateY(360deg);
             }
         }
 
-        /* 按钮样式和悬停效果 */
+        /* 3D 动画按钮 */
         .btn {
             display: block;
-            width: 200px;
-            margin: 30px auto;
+            width: 250px;
+            margin: 50px auto;
             padding: 15px;
-            font-size: 1.2em;
+            font-size: 1.5em;
             text-align: center;
             background-color: transparent;
-            border: 2px solid #feb47b;
-            color: #feb47b;
+            border: 2px solid #00ffcc;
+            color: #00ffcc;
             border-radius: 50px;
             cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 2px;
             transition: 0.3s;
+            transform-style: preserve-3d;
+            animation: moveButton 2s infinite alternate;
+        }
+
+        /* 按钮特效 */
+        @keyframes moveButton {
+            0% {
+                transform: translateY(0) rotateY(0deg);
+            }
+            100% {
+                transform: translateY(-20px) rotateY(180deg);
+            }
         }
 
         .btn:hover {
-            background-color: #feb47b;
+            background-color: #00ffcc;
             color: #111;
             transform: scale(1.1);
         }
 
-        /* 圆形波浪按钮点击特效 */
-        .btn:active {
-            transform: scale(1);
-            animation: ripple 0.6s ease;
+        /* 动态粒子背景 */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -2;
         }
 
-        @keyframes ripple {
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(0, 255, 255, 0.7);
+            animation: moveParticle 3s infinite;
+        }
+
+        @keyframes moveParticle {
             0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            50% {
+                opacity: 1;
                 transform: scale(1);
-                opacity: 1;
             }
             100% {
-                transform: scale(4);
                 opacity: 0;
+                transform: scale(0);
             }
-        }
-
-        /* 内容区域的卡片效果 */
-        .content-card {
-            width: 80%;
-            max-width: 600px;
-            margin: 50px auto;
-            padding: 30px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(255, 165, 0, 0.3);
-            text-align: center;
-            animation: fadeIn 2s ease-out;
-        }
-
-        /* 渐显动画 */
-        @keyframes fadeIn {
-            0% {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .content-card h2 {
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            color: #feb47b;
-        }
-
-        .content-card p {
-            font-size: 1.2em;
-            color: #fff;
-            line-height: 1.6;
         }
 
         /* 响应式设计 */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 3em;
+            .title {
+                font-size: 2.5em;
             }
-
             .btn {
-                width: 150px;
+                width: 200px;
                 padding: 12px;
-                font-size: 1em;
-            }
-
-            .content-card h2 {
-                font-size: 2em;
-            }
-
-            .content-card p {
-                font-size: 1em;
+                font-size: 1.2em;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- 渐变背景 -->
+    <!-- 背景 -->
     <div class="background"></div>
 
-    <!-- 标题 -->
-    <h1>欢迎来到特效展示</h1>
-
-    <!-- 内容卡片 -->
-    <div class="content-card">
-        <h2>我们的目标</h2>
-        <p>通过视觉效果和互动，提升网站的吸引力并为用户带来愉悦的体验。</p>
-    </div>
+    <!-- 动态标题 -->
+    <h1 class="title">未来世界</h1>
 
     <!-- 按钮 -->
-    <button class="btn">点击这里</button>
+    <button class="btn">探索</button>
 
-    <!-- 版本控制：动态添加当前时间戳作为版本号 -->
+    <!-- 粒子背景 -->
+    <div class="particles">
+        <!-- 动态粒子效果 -->
+        <div class="particle" style="top: 10%; left: 30%; width: 10px; height: 10px;"></div>
+        <div class="particle" style="top: 50%; left: 60%; width: 12px; height: 12px;"></div>
+        <div class="particle" style="top: 70%; left: 80%; width: 8px; height: 8px;"></div>
+        <div class="particle" style="top: 20%; left: 20%; width: 15px; height: 15px;"></div>
+        <div class="particle" style="top: 40%; left: 40%; width: 6px; height: 6px;"></div>
+    </div>
+
+    <!-- JavaScript: 动态创建更多粒子 -->
+    <script>
+        function createParticle() {
+            const particlesContainer = document.querySelector('.particles');
+            const particle = document.createElement('div');
+            particle.classList.add('particle');
+            const size = Math.random() * 20 + 5; // 随机粒子大小
+            const posX = Math.random() * 100; // 随机粒子位置
+            const posY = Math.random() * 100;
+            const animationDuration = Math.random() * 3 + 2; // 随机动画持续时间
+
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            particle.style.top = posY + '%';
+            particle.style.left = posX + '%';
+            particle.style.animationDuration = animationDuration + 's';
+
+            particlesContainer.appendChild(particle);
+
+            // 每隔一段时间创建新的粒子
+            setTimeout(createParticle, Math.random() * 500);
+        }
+
+        // 初始化粒子效果
+        createParticle();
+    </script>
+
+    <!-- 动态添加版本号 -->
     <script>
         var timestamp = new Date().getTime();  // 获取当前时间戳
-        var script = document.createElement('script');
-        script.src = "script.js?v=" + timestamp;  // 将时间戳作为查询参数添加到脚本文件
-        document.body.appendChild(script);
+        var cssLink = document.getElementById('dynamic-css');
+        cssLink.href = "style.css?v=" + timestamp;  // 将时间戳作为查询参数添加到 CSS 文件
     </script>
+
 </body>
 </html>
