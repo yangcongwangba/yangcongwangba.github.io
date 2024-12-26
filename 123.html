@@ -3,303 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圣诞节炫酷主题</title>
+    <title>随机炫酷特效</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             font-family: 'Arial', sans-serif;
-            background: #1e2a47;
-            color: #fff;
-            height: 100vh;
-            overflow: hidden;
+            background: #1c1c1c;
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
+            height: 100vh;
+            overflow: hidden;
             flex-direction: column;
-            position: relative;
-        }
-
-        .background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #FF5F6D, #FFC3A0);
-            z-index: -1;
-        }
-
-        /* 圣诞树 */
-        .tree {
-            width: 120px;
-            height: 160px;
-            background: green;
-            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-            position: relative;
-            margin-top: 50px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-
-        .tree:before {
-            content: '';
-            position: absolute;
-            width: 60px;
-            height: 40px;
-            background: brown;
-            left: 50%;
-            bottom: -40px;
-            transform: translateX(-50%);
-        }
-
-        /* 圣诞装饰 */
-        .tree .star {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 2rem;
-            color: yellow;
-        }
-
-        .tree .ornaments {
-            position: absolute;
-            top: 50px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 1.5rem;
-            color: red;
-        }
-
-        /* 礼物盒 */
-        .gift-box {
-            position: absolute;
-            top: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 80px;
-            background: red;
-            border-radius: 10px;
-            display: none;
-            animation: fall 2s ease-in-out forwards;
-        }
-
-        @keyframes fall {
-            0% {
-                top: -100px;
-                opacity: 1;
-            }
-            100% {
-                top: 150px;
-                opacity: 1;
-            }
-        }
-
-        /* 雪花动画 */
-        .snowflake {
-            position: absolute;
-            top: -10px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.8;
-            animation: snow 5s infinite;
-        }
-
-        @keyframes snow {
-            0% {
-                top: -10px;
-                opacity: 1;
-            }
-            100% {
-                top: 100vh;
-                opacity: 0;
-            }
-        }
-
-        /* 圣诞节贺卡文字 */
-        .greeting {
             text-align: center;
-            font-size: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            color: #fff;
-            animation: textAnimation 3s ease-in-out infinite;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background-color: #FF6347;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
             margin-top: 30px;
         }
 
-        @keyframes textAnimation {
-            0% {
-                transform: scale(1);
-                color: #fff;
-            }
-            50% {
-                transform: scale(1.2);
-                color: #ff0000;
-            }
-            100% {
-                transform: scale(1);
-                color: #fff;
-            }
-        }
-
-        /* 圣诞按钮 */
-        .btn {
-            margin-top: 50px;
-            padding: 12px 20px;
-            font-size: 1.2rem;
-            background-color: #ff4c4c;
-            border: none;
-            color: #fff;
-            border-radius: 10px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transition: 0.3s;
-        }
-
         .btn:hover {
-            background-color: #ff1a1a;
             transform: scale(1.1);
         }
 
-        /* 粒子效果 */
-        .particles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        .particle {
-            position: absolute;
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.8);
-            animation: moveParticle 2s linear infinite;
-        }
-
-        @keyframes moveParticle {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(500px) scale(0);
-                opacity: 0;
-            }
-        }
-
         /* 全屏特效 */
-        .fullscreen-effect {
+        .effect {
             position: absolute;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #fff;
-            font-size: 2rem;
-            opacity: 0;
-            animation: showEffect 1s forwards;
+            pointer-events: none;
         }
 
-        @keyframes showEffect {
+        /* 烟花特效 */
+        .firework {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: explode 1.5s ease-out forwards;
+        }
+
+        @keyframes explode {
             0% {
-                opacity: 0;
+                transform: scale(0);
+                opacity: 1;
             }
             100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        /* 粒子效果 */
+        .particle {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            animation: moveParticle 3s linear forwards;
+        }
+
+        @keyframes moveParticle {
+            0% {
+                transform: translate(0, 0);
                 opacity: 1;
+            }
+            100% {
+                transform: translate(500px, 500px);
+                opacity: 0;
+            }
+        }
+
+        /* 光束效果 */
+        .beam {
+            position: absolute;
+            width: 10px;
+            height: 100vh;
+            background: linear-gradient(to bottom, #ff00ff, #00ffff);
+            animation: beamAnimation 2s ease-in-out infinite;
+        }
+
+        @keyframes beamAnimation {
+            0% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(180deg);
+            }
+            100% {
+                transform: rotate(360deg);
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="background"></div>
+    <div class="effect-container"></div>
 
-    <!-- 圣诞树 -->
-    <div class="tree" onclick="shakeTree();">
-        <div class="star">★</div>
-        <div class="ornaments">• • •</div>
-    </div>
+    <button class="btn" onclick="triggerRandomEffect()">点击触发炫酷特效</button>
 
-    <!-- 圣诞节贺卡文字 -->
-    <div class="greeting">
-        Merry Christmas!
-    </div>
-
-    <!-- 圣诞按钮 -->
-    <button class="btn" onclick="triggerEffect()">祝你圣诞快乐！</button>
-
-    <!-- 礼物盒 -->
-    <div class="gift-box" onclick="openGift()"></div>
-
-    <!-- 粒子效果 -->
-    <div class="particles"></div>
-
-    <!-- 动态雪花 -->
     <script>
-        function createParticles() {
-            const particlesContainer = document.querySelector('.particles');
-            for (let i = 0; i < 100; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                particle.style.left = `${Math.random() * 100}vw`;
-                particle.style.animationDuration = `${Math.random() * 2 + 2}s`;
-                particle.style.animationDelay = `${Math.random() * 2}s`;
-                particlesContainer.appendChild(particle);
+        // 设置版本号为当前时间戳
+        const version = Date.now();
+
+        // 获取特效容器
+        const effectContainer = document.querySelector('.effect-container');
+
+        // 触发随机特效
+        function triggerRandomEffect() {
+            // 清除之前的特效
+            effectContainer.innerHTML = '';
+
+            // 随机选择特效类型
+            const effectType = Math.floor(Math.random() * 4);
+
+            switch (effectType) {
+                case 0:
+                    createFireworkEffect();
+                    break;
+                case 1:
+                    createParticleEffect();
+                    break;
+                case 2:
+                    createBeamEffect();
+                    break;
+                case 3:
+                    createCombinationEffect();
+                    break;
             }
         }
 
-        createParticles();
-
-        // 摇晃圣诞树并掉落礼物盒
-        function shakeTree() {
-            const tree = document.querySelector('.tree');
-            tree.style.transform = 'rotate(10deg)';
-            setTimeout(() => {
-                tree.style.transform = 'rotate(-10deg)';
-            }, 100);
-            setTimeout(() => {
-                tree.style.transform = 'rotate(0deg)';
-                showGiftBox();
-            }, 200);
+        // 创建烟花特效
+        function createFireworkEffect() {
+            for (let i = 0; i < 10; i++) {
+                const firework = document.createElement('div');
+                firework.classList.add('firework');
+                firework.style.width = `${Math.random() * 50 + 20}px`;
+                firework.style.height = firework.style.width;
+                firework.style.left = `${Math.random() * 100}vw`;
+                firework.style.top = `${Math.random() * 100}vh`;
+                effectContainer.appendChild(firework);
+            }
         }
 
-        // 显示礼物盒
-        function showGiftBox() {
-            const giftBox = document.querySelector('.gift-box');
-            giftBox.style.display = 'block';
+        // 创建粒子效果
+        function createParticleEffect() {
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                const size = Math.random() * 5 + 5;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${Math.random() * 100}vw`;
+                particle.style.top = `${Math.random() * 100}vh`;
+                effectContainer.appendChild(particle);
+            }
         }
 
-        // 打开礼物盒
-        function openGift() {
-            const giftBox = document.querySelector('.gift-box');
-            const effect = document.createElement('div');
-            effect.classList.add('fullscreen-effect');
-            effect.innerHTML = '🎁 随机礼物！';
-            document.body.appendChild(effect);
-            setTimeout(() => {
-                effect.remove();
-            }, 2000);
+        // 创建光束效果
+        function createBeamEffect() {
+            const beam = document.createElement('div');
+            beam.classList.add('beam');
+            beam.style.left = `${Math.random() * 100}vw`;
+            effectContainer.appendChild(beam);
         }
 
-        // 触发全屏特效
-        function triggerEffect() {
-            const effect = document.createElement('div');
-            effect.classList.add('fullscreen-effect');
-            effect.innerHTML = '🎆 圣诞烟花！';
-            document.body.appendChild(effect);
-            setTimeout(() => {
-                effect.remove();
-            }, 2000);
+        // 创建组合效果
+        function createCombinationEffect() {
+            const combinationTypes = [createFireworkEffect, createParticleEffect, createBeamEffect];
+            const numEffects = Math.floor(Math.random() * 3) + 1;
+
+            for (let i = 0; i < numEffects; i++) {
+                const randomEffect = combinationTypes[Math.floor(Math.random() * combinationTypes.length)];
+                randomEffect();
+            }
         }
     </script>
 
