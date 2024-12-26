@@ -3,196 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>炫酷科幻动画展示</title>
+    <title>圣诞节炫酷主题</title>
 
-    <!-- 动态添加版本号 -->
+    <!-- 动态版本号 -->
     <link id="dynamic-css" rel="stylesheet" href="style.css?v=<script>document.write(new Date().getTime());</script>">
     
     <style>
-        /* 页面基础样式 */
         body {
             margin: 0;
             padding: 0;
-            background: #1a1a1a;
-            color: #fff;
             font-family: 'Arial', sans-serif;
-            overflow: hidden;
+            background: #1e2a47;
+            color: #fff;
             height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
 
-        /* 背景渐变效果 */
+        /* 背景渐变 */
         .background {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,45,55,1) 100%);
-            animation: gradientShift 10s infinite alternate;
+            background: linear-gradient(45deg, #FF5F6D, #FFC3A0);
             z-index: -1;
         }
 
-        /* 背景渐变动画 */
-        @keyframes gradientShift {
+        /* 圣诞树 */
+        .tree {
+            width: 150px;
+            height: 200px;
+            background: green;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            position: relative;
+            margin-top: 50px;
+        }
+
+        .tree:before {
+            content: '';
+            position: absolute;
+            width: 100px;
+            height: 40px;
+            background: brown;
+            left: 50%;
+            bottom: -40px;
+            transform: translateX(-50%);
+        }
+
+        /* 圣诞装饰 */
+        .tree .star {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            color: yellow;
+        }
+
+        .tree .ornaments {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            color: red;
+        }
+
+        /* 雪花动画 */
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: snow 5s infinite;
+        }
+
+        /* 雪花飘落动画 */
+        @keyframes snow {
             0% {
-                background: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,45,55,1) 100%);
-            }
-            50% {
-                background: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(55,0,65,1) 100%);
+                top: -10px;
+                opacity: 1;
             }
             100% {
-                background: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,45,55,1) 100%);
+                top: 100vh;
+                opacity: 0;
             }
         }
 
-        /* 3D 旋转文字 */
-        .title {
-            font-size: 4em;
+        /* 圣诞节贺卡文字 */
+        .greeting {
             text-align: center;
-            color: #fff;
+            font-size: 3rem;
             text-transform: uppercase;
             letter-spacing: 5px;
-            animation: rotateText 5s linear infinite;
+            color: #fff;
+            animation: textAnimation 3s ease-in-out infinite;
         }
 
-        @keyframes rotateText {
+        @keyframes textAnimation {
             0% {
-                transform: rotateY(0deg);
+                transform: scale(1);
+                color: #fff;
+            }
+            50% {
+                transform: scale(1.2);
+                color: #ff0000;
             }
             100% {
-                transform: rotateY(360deg);
+                transform: scale(1);
+                color: #fff;
             }
         }
 
-        /* 3D 动画按钮 */
+        /* 圣诞按钮 */
         .btn {
-            display: block;
-            width: 250px;
-            margin: 50px auto;
-            padding: 15px;
-            font-size: 1.5em;
-            text-align: center;
-            background-color: transparent;
-            border: 2px solid #00ffcc;
-            color: #00ffcc;
-            border-radius: 50px;
+            margin-top: 50px;
+            padding: 15px 25px;
+            font-size: 1.5rem;
+            background-color: #ff4c4c;
+            border: none;
+            color: #fff;
+            border-radius: 10px;
             cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             transition: 0.3s;
-            transform-style: preserve-3d;
-            animation: moveButton 2s infinite alternate;
-        }
-
-        /* 按钮特效 */
-        @keyframes moveButton {
-            0% {
-                transform: translateY(0) rotateY(0deg);
-            }
-            100% {
-                transform: translateY(-20px) rotateY(180deg);
-            }
         }
 
         .btn:hover {
-            background-color: #00ffcc;
-            color: #111;
+            background-color: #ff1a1a;
             transform: scale(1.1);
-        }
-
-        /* 动态粒子背景 */
-        .particles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -2;
-        }
-
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(0, 255, 255, 0.7);
-            animation: moveParticle 3s infinite;
-        }
-
-        @keyframes moveParticle {
-            0% {
-                opacity: 0;
-                transform: scale(0);
-            }
-            50% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(0);
-            }
         }
 
         /* 响应式设计 */
         @media (max-width: 768px) {
-            .title {
-                font-size: 2.5em;
+            .greeting {
+                font-size: 2rem;
             }
+
             .btn {
-                width: 200px;
-                padding: 12px;
-                font-size: 1.2em;
+                font-size: 1.2rem;
+                padding: 12px 20px;
+            }
+
+            .tree {
+                width: 120px;
+                height: 160px;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- 背景 -->
+    <!-- 背景渐变 -->
     <div class="background"></div>
 
-    <!-- 动态标题 -->
-    <h1 class="title">未来世界</h1>
-
-    <!-- 按钮 -->
-    <button class="btn">探索</button>
-
-    <!-- 粒子背景 -->
-    <div class="particles">
-        <!-- 动态粒子效果 -->
-        <div class="particle" style="top: 10%; left: 30%; width: 10px; height: 10px;"></div>
-        <div class="particle" style="top: 50%; left: 60%; width: 12px; height: 12px;"></div>
-        <div class="particle" style="top: 70%; left: 80%; width: 8px; height: 8px;"></div>
-        <div class="particle" style="top: 20%; left: 20%; width: 15px; height: 15px;"></div>
-        <div class="particle" style="top: 40%; left: 40%; width: 6px; height: 6px;"></div>
+    <!-- 圣诞树 -->
+    <div class="tree">
+        <div class="star">★</div>
+        <div class="ornaments">• • •</div>
     </div>
 
-    <!-- JavaScript: 动态创建更多粒子 -->
+    <!-- 圣诞节贺卡文字 -->
+    <div class="greeting">
+        Merry Christmas!
+    </div>
+
+    <!-- 圣诞按钮 -->
+    <button class="btn">祝你圣诞快乐！</button>
+
+    <!-- 动态雪花 -->
     <script>
-        function createParticle() {
-            const particlesContainer = document.querySelector('.particles');
-            const particle = document.createElement('div');
-            particle.classList.add('particle');
-            const size = Math.random() * 20 + 5; // 随机粒子大小
-            const posX = Math.random() * 100; // 随机粒子位置
-            const posY = Math.random() * 100;
-            const animationDuration = Math.random() * 3 + 2; // 随机动画持续时间
-
-            particle.style.width = size + 'px';
-            particle.style.height = size + 'px';
-            particle.style.top = posY + '%';
-            particle.style.left = posX + '%';
-            particle.style.animationDuration = animationDuration + 's';
-
-            particlesContainer.appendChild(particle);
-
-            // 每隔一段时间创建新的粒子
-            setTimeout(createParticle, Math.random() * 500);
+        // 创建雪花
+        function createSnowflakes() {
+            let numOfSnowflakes = 30;
+            for (let i = 0; i < numOfSnowflakes; i++) {
+                let snowflake = document.createElement('div');
+                snowflake.classList.add('snowflake');
+                snowflake.style.width = `${Math.random() * 10 + 5}px`;
+                snowflake.style.height = snowflake.style.width;
+                snowflake.style.left = `${Math.random() * 100}vw`;
+                snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`; // 随机飘落时间
+                document.body.appendChild(snowflake);
+            }
         }
 
-        // 初始化粒子效果
-        createParticle();
+        createSnowflakes();
     </script>
 
-    <!-- 动态添加版本号 -->
+    <!-- 动态版本号 -->
     <script>
         var timestamp = new Date().getTime();  // 获取当前时间戳
         var cssLink = document.getElementById('dynamic-css');
