@@ -1,90 +1,186 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+<html lang="zh">
 <head>
-<title>star</title>
-<script type="text/javascript">
-window.onload = function () {
-C = Math.cos; // cache Math objects
-S = Math.sin;
-U = 0;
-w = window;
-j = document;
-d = j.getElementById("c");
-c = d.getContext("2d");
-W = d.width = w.innerWidth;
-H = d.height = w.innerHeight;
-c.fillRect(0, 0, W, H); // resize <canvas> and draw black rect (default)
-c.globalCompositeOperation = "lighter";  // switch to additive color application
-c.lineWidth = 0.2;
-c.lineCap = "round";
-var bool = 0, 
-t = 0; // theta
-d.onmousemove = function (e) {
-if(window.T) {
-if(D==9) { D=Math.random()*15; f(1); }
-clearTimeout(T);
-}
-X = e.pageX; // grab mouse pixel coords
-Y = e.pageY;
-a=0; // previous coord.x
-b=0; // previous coord.y 
-A = X, // original coord.x
-B = Y; // original coord.y
-R=(e.pageX/W * 999>>0)/999;
-r=(e.pageY/H * 999>>0)/999;
-U=e.pageX/H * 360 >>0;
-D=9;
-g = 360 * Math.PI / 180;
-T = setInterval(f = function (e) { // start looping spectrum
-c.save();
-c.globalCompositeOperation = "source-over"; // switch to additive color application
-if(e!=1) {
-c.fillStyle = "rgba(0,0,0,0.02)";
-c.fillRect(0, 0, W, H); // resize <canvas> and draw black rect (default)
-}
-c.restore();
-i = 25; while(i --) {
-c.beginPath();
-if(D > 450 || bool) { // decrease diameter
-if(!bool) { // has hit maximum
-bool = 1;
-}
-if(D < 0.1) { // has hit minimum
-bool = 0;
-}
-t -= g; // decrease theta
-D -= 0.1; // decrease size
-}
-if(!bool) {
-t += g; // increase theta
-D += 0.1; // increase size
-}
-q = (R / r - 1) * t; // create hypotrochoid from current mouse position, and setup variables (see: http://en.wikipedia.org/wiki/Hypotrochoid)
-x = (R - r) * C(t) + D * C(q) + (A + (X - A) * (i / 25)) + (r - R); // center on xy coords
-y = (R - r) * S(t) - D * S(q) + (B + (Y - B) * (i / 25));
-if (a) { // draw once two points are set
-c.moveTo(a, b);
-c.lineTo(x, y)
-}
-c.strokeStyle = "hsla(" + (U % 360) + ",100%,50%,0.75)"; // draw rainbow hypotrochoid
-c.stroke();
-a = x; // set previous coord.x
-b = y; // set previous coord.y
-}
-U -= 0.5; // increment hue
-A = X; // set original coord.x
-B = Y; // set original coord.y
-}, 16);
-}
-j.onkeydown = function(e) { a=b=0; R += 0.05 }
-d.onmousemove({pageX:300, pageY:290})
-}
-
-
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打砖块游戏</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #282c34;
+        }
+        canvas {
+            border: 2px solid #fff;
+        }
+    </style>
+    <!-- 在CSS文件中也可以加上版本号 -->
+    <!-- <link rel="stylesheet" href="style.css?v=1.0"> -->
 </head>
+<body>
+<canvas id="gameCanvas"></canvas>
 
-<body style="margin:0px;padding:0px;width:100%;height:100%;overflow:hidden;">
-<canvas id="c"></canvas>
+<!-- 为script标签添加版本号 -->
+<script src="game.js?v=1.0"></script> <!-- 在此处v=1.0表示版本号 -->
+<script>
+    // 获取画布元素和上下文
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // 设置画布的宽度和高度
+    canvas.width = 480;
+    canvas.height = 320;
+
+    // 游戏元素设置
+    const ballRadius = 10;
+    const paddleHeight = 10;
+    const paddleWidth = 75;
+    let ballX = canvas.width / 2;
+    let ballY = canvas.height - 30;
+    let ballDX = 2;
+    let ballDY = -2;
+    let paddleX = (canvas.width - paddleWidth) / 2;
+    let rightPressed = false;
+    let leftPressed = false;
+
+    // 砖块设置
+    const brickRowCount = 3;
+    const brickColumnCount = 5;
+    const brickWidth = 75;
+    const brickHeight = 20;
+    const brickPadding = 10;
+    const brickOffsetTop = 30;
+    const brickOffsetLeft = 30;
+    let bricks = [];
+
+    // 初始化砖块
+    for (let c = 0; c < brickColumnCount; c++) {
+        bricks[c] = [];
+        for (let r = 0; r < brickRowCount; r++) {
+            bricks[c][r] = { x: 0, y: 0, status: 1 };
+        }
+    }
+
+    // 监听键盘事件
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+
+    function keyDownHandler(e) {
+        if (e.key == "Right" || e.key == "ArrowRight") {
+            rightPressed = true;
+        } else if (e.key == "Left" || e.key == "ArrowLeft") {
+            leftPressed = true;
+        }
+    }
+
+    function keyUpHandler(e) {
+        if (e.key == "Right" || e.key == "ArrowRight") {
+            rightPressed = false;
+        } else if (e.key == "Left" || e.key == "ArrowLeft") {
+            leftPressed = false;
+        }
+    }
+
+    // 绘制小球
+    function drawBall() {
+        ctx.beginPath();
+        ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+        ctx.fillStyle = "#0095DD";
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    // 绘制挡板
+    function drawPaddle() {
+        ctx.beginPath();
+        ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+        ctx.fillStyle = "#0095DD";
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    // 绘制砖块
+    function drawBricks() {
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                if (bricks[c][r].status == 1) {
+                    let brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
+                    let brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
+                    bricks[c][r].x = brickX;
+                    bricks[c][r].y = brickY;
+                    ctx.beginPath();
+                    ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                    ctx.fillStyle = "#0095DD";
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+        }
+    }
+
+    // 碰撞检测
+    function collisionDetection() {
+        for (let c = 0; c < brickColumnCount; c++) {
+            for (let r = 0; r < brickRowCount; r++) {
+                let b = bricks[c][r];
+                if (b.status == 1) {
+                    if (ballX > b.x && ballX < b.x + brickWidth && ballY > b.y && ballY < b.y + brickHeight) {
+                        ballDY = -ballDY;
+                        b.status = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    // 更新游戏逻辑
+    function draw() {
+        // 清空画布
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 绘制砖块、球、挡板
+        drawBricks();
+        drawBall();
+        drawPaddle();
+
+        // 碰撞检测
+        collisionDetection();
+
+        // 移动小球
+        ballX += ballDX;
+        ballY += ballDY;
+
+        // 碰撞边界检测
+        if (ballX + ballDX > canvas.width - ballRadius || ballX + ballDX < ballRadius) {
+            ballDX = -ballDX;
+        }
+        if (ballY + ballDY < ballRadius) {
+            ballDY = -ballDY;
+        } else if (ballY + ballDY > canvas.height - ballRadius) {
+            if (ballX > paddleX && ballX < paddleX + paddleWidth) {
+                ballDY = -ballDY;
+            } else {
+                // 游戏结束
+                alert("游戏结束!");
+                document.location.reload();
+            }
+        }
+
+        // 控制挡板的移动
+        if (rightPressed && paddleX < canvas.width - paddleWidth) {
+            paddleX += 7;
+        } else if (leftPressed && paddleX > 0) {
+            paddleX -= 7;
+        }
+
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+</script>
 </body>
 </html>
