@@ -1,2 +1,130 @@
-<p>122</p>
-<h3>333</h3>
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>合成大西瓜</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+        }
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background-color: #fff;
+            border: 2px solid #ddd;
+        }
+        .fruit {
+            position: absolute;
+            cursor: pointer;
+        }
+        .message {
+            text-align: center;
+            font-size: 24px;
+            margin-top: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div class="message" id="gameMessage">合成大西瓜！</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 设置画布大小
+    canvas.width = 800;
+    canvas.height = 600;
+
+    // 水果数据
+    const fruits = [
+        { name: '小西瓜', size: 50, color: 'green', x: 100, y: 100, level: 1 },
+        { name: '小西瓜', size: 50, color: 'green', x: 200, y: 100, level: 1 },
+        { name: '中西瓜', size: 75, color: 'lightgreen', x: 300, y: 100, level: 2 },
+        { name: '大西瓜', size: 100, color: 'darkgreen', x: 400, y: 100, level: 3 },
+    ];
+
+    let score = 0;
+    let gameOver = false;
+
+    // 绘制水果
+    function drawFruits() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (const fruit of fruits) {
+            ctx.beginPath();
+            ctx.arc(fruit.x, fruit.y, fruit.size, 0, Math.PI * 2);
+            ctx.fillStyle = fruit.color;
+            ctx.fill();
+            ctx.closePath();
+        }
+    }
+
+    // 合成水果
+    function mergeFruits() {
+        const newFruits = [];
+        for (let i = 0; i < fruits.length; i++) {
+            for (let j = i + 1; j < fruits.length; j++) {
+                if (fruits[i].level === fruits[j].level && fruits[i].level < 3) {
+                    // 合成两个相同等级的水果
+                    newFruits.push({
+                        name: `合成${fruits[i].level + 1}`,
+                        size: fruits[i].size + 25,
+                        color: fruits[i].level === 1 ? 'lightgreen' : 'darkgreen',
+                        x: (fruits[i].x + fruits[j].x) / 2,
+                        y: (fruits[i].y + fruits[j].y) / 2,
+                        level: fruits[i].level + 1,
+                    });
+                    fruits.splice(j, 1); // 移除第二个水果
+                    fruits.splice(i, 1); // 移除第一个水果
+                    i--; // 调整索引以便继续检查合成
+                    break;
+                }
+            }
+        }
+        fruits.push(...newFruits);
+    }
+
+    // 处理游戏逻辑
+    function gameLoop() {
+        if (gameOver) return;
+
+        mergeFruits(); // 每一帧尝试合成水果
+        drawFruits();
+
+        // 如果有大西瓜，就游戏胜利
+        if (fruits.some(fruit => fruit.level === 3)) {
+            document.getElementById('gameMessage').textContent = "你赢了！合成了大西瓜！";
+            gameOver = true;
+            return;
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    // 触摸事件
+    canvas.addEventListener('click', (event) => {
+        if (gameOver) return;
+
+        const clickX = event.offsetX;
+        const clickY = event.offsetY;
+
+        for (const fruit of fruits) {
+            const distance = Math.sqrt(Math.pow(fruit.x - clickX, 2) + Math.pow(fruit.y - clickY, 2));
+            if (distance < fruit.size) {
+                fruit.x += 10; // 模拟点击后水果位置的改变
+                fruit.y += 10;
+                break;
+            }
+        }
+    });
+
+    // 初始化游戏
+    gameLoop();
+</script>
+</body>
+</html>
