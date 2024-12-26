@@ -3,183 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>打砖块游戏</title>
+    <title>手机避开障碍游戏</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #282c34;
+            background-color: #f4f4f4;
         }
         canvas {
-            border: 2px solid #fff;
+            display: block;
+            margin: 0 auto;
+            background-color: #333;
         }
     </style>
-    <!-- 在CSS文件中也可以加上版本号 -->
-    <!-- <link rel="stylesheet" href="style.css?v=1.0"> -->
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
 
-<!-- 为script标签添加版本号 -->
-<script src="game.js?v=1.0"></script> <!-- 在此处v=1.0表示版本号 -->
+<script src="game.js?v=1.0"></script> <!-- 添加版本号参数 -->
 <script>
-    // 获取画布元素和上下文
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // 设置画布的宽度和高度
-    canvas.width = 480;
-    canvas.height = 320;
+    // 设置画布尺寸
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    // 游戏元素设置
-    const ballRadius = 10;
-    const paddleHeight = 10;
-    const paddleWidth = 75;
-    let ballX = canvas.width / 2;
-    let ballY = canvas.height - 30;
-    let ballDX = 2;
-    let ballDY = -2;
-    let paddleX = (canvas.width - paddleWidth) / 2;
-    let rightPressed = false;
-    let leftPressed = false;
+    // 玩家方块
+    const playerWidth = 50;
+    const playerHeight = 50;
+    let playerX = canvas.width / 2 - playerWidth / 2;
+    let playerY = canvas.height - playerHeight - 10;
+    const playerSpeed = 7;
 
-    // 砖块设置
-    const brickRowCount = 3;
-    const brickColumnCount = 5;
-    const brickWidth = 75;
-    const brickHeight = 20;
-    const brickPadding = 10;
-    const brickOffsetTop = 30;
-    const brickOffsetLeft = 30;
-    let bricks = [];
+    // 障碍物
+    const obstacleWidth = 50;
+    const obstacleHeight = 50;
+    const obstacles = [];
+    const obstacleSpeed = 4;
+    let score = 0;
 
-    // 初始化砖块
-    for (let c = 0; c < brickColumnCount; c++) {
-        bricks[c] = [];
-        for (let r = 0; r < brickRowCount; r++) {
-            bricks[c][r] = { x: 0, y: 0, status: 1 };
+    // 触摸事件控制
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    // 监听触摸事件
+    canvas.addEventListener("touchstart", touchStart, false);
+    canvas.addEventListener("touchmove", touchMove, false);
+
+    function touchStart(event) {
+        touchStartX = event.touches[0].clientX;
+    }
+
+    function touchMove(event) {
+        touchEndX = event.touches[0].clientX;
+        const deltaX = touchEndX - touchStartX;
+
+        // 控制方块的左右移动
+        if (deltaX > 0) {
+            playerX += playerSpeed;
+        } else if (deltaX < 0) {
+            playerX -= playerSpeed;
+        }
+
+        // 防止方块超出屏幕边界
+        if (playerX < 0) playerX = 0;
+        if (playerX > canvas.width - playerWidth) playerX = canvas.width - playerWidth;
+
+        touchStartX = touchEndX;  // 更新起始触摸位置
+    }
+
+    // 随机生成障碍物
+    function createObstacle() {
+        const obstacleX = Math.random() * (canvas.width - obstacleWidth);
+        obstacles.push({ x: obstacleX, y: -obstacleHeight });
+    }
+
+    // 绘制玩家方块
+    function drawPlayer() {
+        ctx.fillStyle = "#00FF00";
+        ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
+    }
+
+    // 绘制障碍物
+    function drawObstacles() {
+        ctx.fillStyle = "#FF0000";
+        for (let i = 0; i < obstacles.length; i++) {
+            const o = obstacles[i];
+            ctx.fillRect(o.x, o.y, obstacleWidth, obstacleHeight);
         }
     }
 
-    // 监听键盘事件
-    document.addEventListener("keydown", keyDownHandler, false);
-    document.addEventListener("keyup", keyUpHandler, false);
+    // 更新障碍物位置
+    function updateObstacles() {
+        for (let i = 0; i < obstacles.length; i++) {
+            const o = obstacles[i];
+            o.y += obstacleSpeed;
 
-    function keyDownHandler(e) {
-        if (e.key == "Right" || e.key == "ArrowRight") {
-            rightPressed = true;
-        } else if (e.key == "Left" || e.key == "ArrowLeft") {
-            leftPressed = true;
-        }
-    }
+            // 检测碰撞
+            if (o.y + obstacleHeight > playerY && o.y < playerY + playerHeight &&
+                o.x + obstacleWidth > playerX && o.x < playerX + playerWidth) {
+                gameOver();
+                return;
+            }
 
-    function keyUpHandler(e) {
-        if (e.key == "Right" || e.key == "ArrowRight") {
-            rightPressed = false;
-        } else if (e.key == "Left" || e.key == "ArrowLeft") {
-            leftPressed = false;
-        }
-    }
-
-    // 绘制小球
-    function drawBall() {
-        ctx.beginPath();
-        ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
-        ctx.fillStyle = "#0095DD";
-        ctx.fill();
-        ctx.closePath();
-    }
-
-    // 绘制挡板
-    function drawPaddle() {
-        ctx.beginPath();
-        ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
-        ctx.fillStyle = "#0095DD";
-        ctx.fill();
-        ctx.closePath();
-    }
-
-    // 绘制砖块
-    function drawBricks() {
-        for (let c = 0; c < brickColumnCount; c++) {
-            for (let r = 0; r < brickRowCount; r++) {
-                if (bricks[c][r].status == 1) {
-                    let brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
-                    let brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
-                    bricks[c][r].x = brickX;
-                    bricks[c][r].y = brickY;
-                    ctx.beginPath();
-                    ctx.rect(brickX, brickY, brickWidth, brickHeight);
-                    ctx.fillStyle = "#0095DD";
-                    ctx.fill();
-                    ctx.closePath();
-                }
+            // 移除掉出屏幕的障碍物
+            if (o.y > canvas.height) {
+                obstacles.splice(i, 1);
+                score++;
             }
         }
     }
 
-    // 碰撞检测
-    function collisionDetection() {
-        for (let c = 0; c < brickColumnCount; c++) {
-            for (let r = 0; r < brickRowCount; r++) {
-                let b = bricks[c][r];
-                if (b.status == 1) {
-                    if (ballX > b.x && ballX < b.x + brickWidth && ballY > b.y && ballY < b.y + brickHeight) {
-                        ballDY = -ballDY;
-                        b.status = 0;
-                    }
-                }
-            }
-        }
+    // 游戏结束
+    function gameOver() {
+        alert("游戏结束！得分：" + score);
+        resetGame();
     }
 
-    // 更新游戏逻辑
+    // 重置游戏
+    function resetGame() {
+        playerX = canvas.width / 2 - playerWidth / 2;
+        playerY = canvas.height - playerHeight - 10;
+        obstacles.length = 0;
+        score = 0;
+    }
+
+    // 绘制游戏状态
     function draw() {
-        // 清空画布
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawPlayer();
+        drawObstacles();
+        updateObstacles();
 
-        // 绘制砖块、球、挡板
-        drawBricks();
-        drawBall();
-        drawPaddle();
+        // 显示得分
+        ctx.fillStyle = "#FFFFFF";
+        ctx.font = "20px Arial";
+        ctx.fillText("得分: " + score, 10, 30);
 
-        // 碰撞检测
-        collisionDetection();
-
-        // 移动小球
-        ballX += ballDX;
-        ballY += ballDY;
-
-        // 碰撞边界检测
-        if (ballX + ballDX > canvas.width - ballRadius || ballX + ballDX < ballRadius) {
-            ballDX = -ballDX;
-        }
-        if (ballY + ballDY < ballRadius) {
-            ballDY = -ballDY;
-        } else if (ballY + ballDY > canvas.height - ballRadius) {
-            if (ballX > paddleX && ballX < paddleX + paddleWidth) {
-                ballDY = -ballDY;
-            } else {
-                // 游戏结束
-                alert("游戏结束!");
-                document.location.reload();
-            }
-        }
-
-        // 控制挡板的移动
-        if (rightPressed && paddleX < canvas.width - paddleWidth) {
-            paddleX += 7;
-        } else if (leftPressed && paddleX > 0) {
-            paddleX -= 7;
+        // 每隔一段时间生成新障碍物
+        if (Math.random() < 0.02) {
+            createObstacle();
         }
 
         requestAnimationFrame(draw);
     }
 
+    // 启动游戏
     draw();
 </script>
 </body>
