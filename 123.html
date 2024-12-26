@@ -1,194 +1,102 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>随机炫酷特效</title>
+    <title>炫酷手机网页</title>
     <style>
-        body {
+        body, html {
             margin: 0;
             padding: 0;
-            font-family: 'Arial', sans-serif;
-            background: #1c1c1c;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             overflow: hidden;
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .btn {
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            background-color: #FF6347;
-            border: none;
-            border-radius: 10px;
+            font-family: Arial, sans-serif;
             color: white;
-            cursor: pointer;
-            transition: transform 0.2s ease-in-out;
-            margin-top: 30px;
+            background: black;
         }
-
-        .btn:hover {
-            transform: scale(1.1);
-        }
-
-        /* 全屏特效 */
-        .effect {
-            position: absolute;
+        canvas {
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             height: 100vh;
-            pointer-events: none;
+            text-align: center;
         }
-
-        /* 烟花特效 */
-        .firework {
-            position: absolute;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 50%;
-            animation: explode 1.5s ease-out forwards;
+        .title {
+            font-size: 2.5rem;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
         }
-
-        @keyframes explode {
-            0% {
-                transform: scale(0);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(3);
-                opacity: 0;
-            }
+        .subtitle {
+            font-size: 1.2rem;
+            margin-top: 10px;
+            opacity: 0.8;
         }
-
-        /* 粒子效果 */
-        .particle {
-            position: absolute;
-            background-color: rgba(255, 255, 255, 0.7);
-            border-radius: 50%;
-            animation: moveParticle 3s linear forwards;
-        }
-
-        @keyframes moveParticle {
-            0% {
-                transform: translate(0, 0);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(500px, 500px);
-                opacity: 0;
-            }
-        }
-
-        /* 光束效果 */
-        .beam {
-            position: absolute;
-            width: 10px;
-            height: 100vh;
-            background: linear-gradient(to bottom, #ff00ff, #00ffff);
-            animation: beamAnimation 2s ease-in-out infinite;
-        }
-
-        @keyframes beamAnimation {
-            0% {
-                transform: rotate(0deg);
-            }
-            50% {
-                transform: rotate(180deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+        .version {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.8rem;
+            opacity: 0.6;
         }
     </style>
 </head>
 <body>
-
-    <div class="effect-container"></div>
-
-    <button class="btn" onclick="triggerRandomEffect()">点击触发炫酷特效</button>
+    <canvas id="background"></canvas>
+    <div class="content">
+        <div class="title">炫酷手机网页</div>
+        <div class="subtitle">各种特效满天飞，舒适又好看！</div>
+    </div>
+    <div class="version" id="version"></div>
 
     <script>
-        // 设置版本号为当前时间戳
-        const version = Date.now();
+        // 动态生成版本号（时间戳）
+        const versionElement = document.getElementById('version');
+        const timestamp = new Date().getTime();
+        versionElement.textContent = `版本号: ${timestamp}`;
 
-        // 获取特效容器
-        const effectContainer = document.querySelector('.effect-container');
+        // 背景特效：星空
+        const canvas = document.getElementById('background');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-        // 触发随机特效
-        function triggerRandomEffect() {
-            // 清除之前的特效
-            effectContainer.innerHTML = '';
-
-            // 随机选择特效类型
-            const effectType = Math.floor(Math.random() * 4);
-
-            switch (effectType) {
-                case 0:
-                    createFireworkEffect();
-                    break;
-                case 1:
-                    createParticleEffect();
-                    break;
-                case 2:
-                    createBeamEffect();
-                    break;
-                case 3:
-                    createCombinationEffect();
-                    break;
-            }
+        const stars = [];
+        for (let i = 0; i < 100; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                radius: Math.random() * 2,
+                speed: Math.random() * 0.5
+            });
         }
 
-        // 创建烟花特效
-        function createFireworkEffect() {
-            for (let i = 0; i < 10; i++) {
-                const firework = document.createElement('div');
-                firework.classList.add('firework');
-                firework.style.width = `${Math.random() * 50 + 20}px`;
-                firework.style.height = firework.style.width;
-                firework.style.left = `${Math.random() * 100}vw`;
-                firework.style.top = `${Math.random() * 100}vh`;
-                effectContainer.appendChild(firework);
-            }
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fill();
+                star.y += star.speed;
+                if (star.y > canvas.height) star.y = 0;
+            });
+            requestAnimationFrame(drawStars);
         }
 
-        // 创建粒子效果
-        function createParticleEffect() {
-            for (let i = 0; i < 50; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                const size = Math.random() * 5 + 5;
-                particle.style.width = `${size}px`;
-                particle.style.height = `${size}px`;
-                particle.style.left = `${Math.random() * 100}vw`;
-                particle.style.top = `${Math.random() * 100}vh`;
-                effectContainer.appendChild(particle);
-            }
-        }
+        drawStars();
 
-        // 创建光束效果
-        function createBeamEffect() {
-            const beam = document.createElement('div');
-            beam.classList.add('beam');
-            beam.style.left = `${Math.random() * 100}vw`;
-            effectContainer.appendChild(beam);
-        }
-
-        // 创建组合效果
-        function createCombinationEffect() {
-            const combinationTypes = [createFireworkEffect, createParticleEffect, createBeamEffect];
-            const numEffects = Math.floor(Math.random() * 3) + 1;
-
-            for (let i = 0; i < numEffects; i++) {
-                const randomEffect = combinationTypes[Math.floor(Math.random() * combinationTypes.length)];
-                randomEffect();
-            }
-        }
+        // 响应窗口调整
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
     </script>
-
 </body>
 </html>
