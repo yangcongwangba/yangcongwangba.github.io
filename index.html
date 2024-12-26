@@ -1,145 +1,90 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>阿巴阿巴</title>
-    <link rel="stylesheet" href="styles.css?v=20241224">
-    <style>
-        /* 样式设置 */
-        body {
-            color: blueviolet; /* 设置字体颜色为白色 */
-            font-family: Arial, sans-serif; /* 设置字体 */
-            text-align: center; /* 让文字居中 */
-            margin: 0; /* 去除默认的页面边距 */
-            height: 100vh; /* 让页面占满整个视口高度 */
-            display: flex; /* 使用Flexbox布局 */
-            flex-direction: column; /* 垂直排列 */
-            justify-content: center; /* 保证内容居中 */
-            background-image: url('https://multimedia.nt.qq.com.cn/download?appid=1406&fileid=EhSG-I_IHHsgcDNeXrK2rtJrjMwwexis2gsg_goohPHU293AigMyBHByb2RQgLsvWhDy3XqFduMOflEi7s2R3_he&spec=0&rkey=CAMSKLgthq-6lGU_oSJRaJ62MSDawECTjIm9IeSLqoPc1xyRzdoSOVWAjZ0'); /* 替换为你的图片链接 */
-            background-size: cover; /* 背景图像覆盖整个屏幕 */
-            background-position: center; /* 背景居中 */
-        }
+<title>star</title>
+<script type="text/javascript">
+window.onload = function () {
+C = Math.cos; // cache Math objects
+S = Math.sin;
+U = 0;
+w = window;
+j = document;
+d = j.getElementById("c");
+c = d.getContext("2d");
+W = d.width = w.innerWidth;
+H = d.height = w.innerHeight;
+c.fillRect(0, 0, W, H); // resize <canvas> and draw black rect (default)
+c.globalCompositeOperation = "lighter";  // switch to additive color application
+c.lineWidth = 0.2;
+c.lineCap = "round";
+var bool = 0, 
+t = 0; // theta
+d.onmousemove = function (e) {
+if(window.T) {
+if(D==9) { D=Math.random()*15; f(1); }
+clearTimeout(T);
+}
+X = e.pageX; // grab mouse pixel coords
+Y = e.pageY;
+a=0; // previous coord.x
+b=0; // previous coord.y 
+A = X, // original coord.x
+B = Y; // original coord.y
+R=(e.pageX/W * 999>>0)/999;
+r=(e.pageY/H * 999>>0)/999;
+U=e.pageX/H * 360 >>0;
+D=9;
+g = 360 * Math.PI / 180;
+T = setInterval(f = function (e) { // start looping spectrum
+c.save();
+c.globalCompositeOperation = "source-over"; // switch to additive color application
+if(e!=1) {
+c.fillStyle = "rgba(0,0,0,0.02)";
+c.fillRect(0, 0, W, H); // resize <canvas> and draw black rect (default)
+}
+c.restore();
+i = 25; while(i --) {
+c.beginPath();
+if(D > 450 || bool) { // decrease diameter
+if(!bool) { // has hit maximum
+bool = 1;
+}
+if(D < 0.1) { // has hit minimum
+bool = 0;
+}
+t -= g; // decrease theta
+D -= 0.1; // decrease size
+}
+if(!bool) {
+t += g; // increase theta
+D += 0.1; // increase size
+}
+q = (R / r - 1) * t; // create hypotrochoid from current mouse position, and setup variables (see: http://en.wikipedia.org/wiki/Hypotrochoid)
+x = (R - r) * C(t) + D * C(q) + (A + (X - A) * (i / 25)) + (r - R); // center on xy coords
+y = (R - r) * S(t) - D * S(q) + (B + (Y - B) * (i / 25));
+if (a) { // draw once two points are set
+c.moveTo(a, b);
+c.lineTo(x, y)
+}
+c.strokeStyle = "hsla(" + (U % 360) + ",100%,50%,0.75)"; // draw rainbow hypotrochoid
+c.stroke();
+a = x; // set previous coord.x
+b = y; // set previous coord.y
+}
+U -= 0.5; // increment hue
+A = X; // set original coord.x
+B = Y; // set original coord.y
+}, 16);
+}
+j.onkeydown = function(e) { a=b=0; R += 0.05 }
+d.onmousemove({pageX:300, pageY:290})
+}
 
-        /* 加强文字的可读性 */
-        h1, p {
-            margin-top: 20px;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7); /* 给文字加上阴影，增强对比度 */
-        }
 
-        /* 音频播放器容器 */
-        .audio-player {
-            display: inline-block;
-            background: rgba(0, 0, 0, 0.7); /* 半透明背景 */
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            margin-top: 20px;
-            width: 80%; /* 调整播放器的宽度 */
-            max-width: 600px; /* 最大宽度 */
-        }
-
-        /* 隐藏原始音频控件 */
-        audio {
-            display: none; /* 隐藏浏览器默认的音频控件 */
-        }
-
-        /* 进度条容器 */
-        .progress-container {
-            width: 100%;
-            height: 10px;
-            background: #ddd;
-            border-radius: 5px;
-            margin-top: 10px;
-            cursor: pointer;
-        }
-
-        .progress-bar {
-            width: 0;
-            height: 100%;
-            background: #ff6347;
-            border-radius: 5px;
-        }
-
-        /* 播放按钮 */
-        .play-button {
-            background-color: #ff6347;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-
-        .play-button:hover {
-            background-color: #ff4500;
-        }
-
-        /* 文字样式 */
-        h1 {
-            font-size: 2rem;
-            margin-top: 50px;
-        }
-
-        p {
-            font-size: 1.2rem;
-        }
-    </style>
+</script>
 </head>
-<body>
-    <h1>你好</h1>
-    <p>张睿康真帅</p >
 
-    <!-- 音频播放器容器 -->
-    <div class="audio-player">
-        <!-- 音频播放 -->
-        <audio id="audio" loop>
-            <source src="http://music.163.com/song/media/outer/url?id=5257138.mp3" type="audio/mpeg">
-            您的浏览器不支持音频播放。
-        </audio>
-        <!-- 播放按钮 -->
-        <button class="play-button" onclick="togglePlay()">播放</button>
-
-        <!-- 进度条 -->
-        <div class="progress-container" onclick="setAudioProgress(event)">
-            <div class="progress-bar" id="progress-bar"></div>
-        </div>
-    </div>
-
-    <script>
-        // 获取音频元素和进度条
-        const audio = document.getElementById('audio');
-        const progressBar = document.getElementById('progress-bar');
-        const progressContainer = document.querySelector('.progress-container');
-
-        // 播放/暂停切换功能
-        function togglePlay() {
-            const button = document.querySelector('.play-button');
-
-            if (audio.paused) {
-                audio.play();
-                button.textContent = '暂停'; // 更新按钮文本
-            } else {
-                audio.pause();
-                button.textContent = '播放'; // 更新按钮文本
-            }
-        }
-
-        // 更新进度条
-        audio.addEventListener('timeupdate', function() {
-            const progress = (audio.currentTime / audio.duration) * 100;
-            progressBar.style.width = progress + '%';
-        });
-
-        // 点击进度条跳转
-        function setAudioProgress(event) {
-            const progressWidth = progressContainer.clientWidth;
-            const clickX = event.offsetX;
-            const newTime = (clickX / progressWidth) * audio.duration;
-            audio.currentTime = newTime;
-        }
-    </script>
+<body style="margin:0px;padding:0px;width:100%;height:100%;overflow:hidden;">
+<canvas id="c"></canvas>
 </body>
 </html>
