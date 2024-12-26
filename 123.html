@@ -8,45 +8,49 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
-            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #6e7dff, #4a90e2);
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            overflow: hidden;
         }
         #gameCanvas {
             display: block;
             margin: 0 auto;
             background-color: #fff;
-            border: 2px solid #ddd;
-        }
-        .fruit {
-            position: absolute;
-            cursor: pointer;
+            border-radius: 15px;
         }
         .message {
             text-align: center;
             font-size: 24px;
             margin-top: 20px;
-            color: #333;
+            color: #fff;
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
         }
     </style>
 </head>
 <body>
+
 <canvas id="gameCanvas"></canvas>
 <div class="message" id="gameMessage">合成大西瓜！</div>
+
+<!-- 版本号添加到JavaScript文件 -->
+<script src="game.js?v=1.1"></script>  <!-- 修改版本号为1.1，确保浏览器加载新文件 -->
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
     // 设置画布大小
-    canvas.width = 800;
-    canvas.height = 600;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
     // 水果数据
     const fruits = [
-        { name: '小西瓜', size: 50, color: 'green', x: 100, y: 100, level: 1 },
-        { name: '小西瓜', size: 50, color: 'green', x: 200, y: 100, level: 1 },
-        { name: '中西瓜', size: 75, color: 'lightgreen', x: 300, y: 100, level: 2 },
-        { name: '大西瓜', size: 100, color: 'darkgreen', x: 400, y: 100, level: 3 },
+        { name: '小西瓜', size: 50, color: '#1abc9c', x: 100, y: 100, level: 1 },
+        { name: '小西瓜', size: 50, color: '#1abc9c', x: 200, y: 100, level: 1 },
     ];
 
     let score = 0;
@@ -74,7 +78,7 @@
                     newFruits.push({
                         name: `合成${fruits[i].level + 1}`,
                         size: fruits[i].size + 25,
-                        color: fruits[i].level === 1 ? 'lightgreen' : 'darkgreen',
+                        color: fruits[i].level === 1 ? '#2ecc71' : '#16a085',
                         x: (fruits[i].x + fruits[j].x) / 2,
                         y: (fruits[i].y + fruits[j].y) / 2,
                         level: fruits[i].level + 1,
@@ -89,7 +93,25 @@
         fruits.push(...newFruits);
     }
 
-    // 处理游戏逻辑
+    // 触摸事件
+    canvas.addEventListener('touchstart', (event) => {
+        if (gameOver) return;
+
+        const clickX = event.touches[0].clientX;
+        const clickY = event.touches[0].clientY;
+
+        for (const fruit of fruits) {
+            const distance = Math.sqrt(Math.pow(fruit.x - clickX, 2) + Math.pow(fruit.y - clickY, 2));
+            if (distance < fruit.size) {
+                // 模拟点击后水果位置的改变
+                fruit.x += 20;
+                fruit.y += 20;
+                break;
+            }
+        }
+    });
+
+    // 游戏主循环
     function gameLoop() {
         if (gameOver) return;
 
@@ -105,23 +127,6 @@
 
         requestAnimationFrame(gameLoop);
     }
-
-    // 触摸事件
-    canvas.addEventListener('click', (event) => {
-        if (gameOver) return;
-
-        const clickX = event.offsetX;
-        const clickY = event.offsetY;
-
-        for (const fruit of fruits) {
-            const distance = Math.sqrt(Math.pow(fruit.x - clickX, 2) + Math.pow(fruit.y - clickY, 2));
-            if (distance < fruit.size) {
-                fruit.x += 10; // 模拟点击后水果位置的改变
-                fruit.y += 10;
-                break;
-            }
-        }
-    });
 
     // 初始化游戏
     gameLoop();
