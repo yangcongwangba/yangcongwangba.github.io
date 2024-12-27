@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星星闪烁特效 - 版本号：<script>document.write(Date.now());</script></title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #000, #001a4d);
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+<script>
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const stars = [];
+    const maxStars = 300;
+
+    class Star {
+        constructor(x, y, radius, speed) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.speed = speed;
+            this.opacity = Math.random();
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+            ctx.fill();
+        }
+
+        update() {
+            this.opacity += Math.random() * 0.05 - 0.025;
+            if (this.opacity < 0) this.opacity = 0;
+            if (this.opacity > 1) this.opacity = 1;
+        }
+    }
+
+    function initStars() {
+        for (let i = 0; i < maxStars; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const radius = Math.random() * 2;
+            const speed = Math.random() * 0.5;
+            stars.push(new Star(x, y, radius, speed));
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        stars.forEach(star => {
+            star.update();
+            star.draw();
+        });
+        requestAnimationFrame(animate);
+    }
+
+    initStars();
+    animate();
+
+    // 交互部分
+    canvas.addEventListener('click', (e) => {
+        createExplosion(e.clientX, e.clientY);
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        const touch = e.touches[0];
+        createTrail(touch.clientX, touch.clientY);
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        createRipple(touch.clientX, touch.clientY);
+    });
+
+    function createExplosion(x, y) {
+        for (let i = 0; i < 50; i++) {
+            const radius = Math.random() * 3;
+            const speed = Math.random() * 4;
+            const dx = (Math.random() - 0.5) * speed;
+            const dy = (Math.random() - 0.5) * speed;
+
+            stars.push(new Star(x + dx * 10, y + dy * 10, radius, speed));
+        }
+    }
+
+    function createTrail(x, y) {
+        for (let i = 0; i < 5; i++) {
+            const radius = Math.random() * 2;
+            const speed = Math.random();
+            stars.push(new Star(x, y, radius, speed));
+        }
+    }
+
+    function createRipple(x, y) {
+        for (let i = 0; i < 20; i++) {
+            const radius = Math.random() * 2;
+            const speed = Math.random() * 2;
+            const dx = Math.cos(i * Math.PI / 10) * speed * 10;
+            const dy = Math.sin(i * Math.PI / 10) * speed * 10;
+
+            stars.push(new Star(x + dx, y + dy, radius, speed));
+        }
+    }
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+</script>
+</body>
+</html>
