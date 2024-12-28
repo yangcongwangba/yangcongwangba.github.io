@@ -3,131 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>滑动与长按特效</title>
+    <title>手机适配多人冒险游戏</title>
     <style>
         body, html {
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background: black;
+            background: #111;
         }
         canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            display: block;
         }
-        .version {
+        #scoreboard {
             position: fixed;
-            bottom: 10px;
-            right: 10px;
-            font-size: 0.8rem;
+            top: 10px;
+            left: 10px;
             color: white;
-            opacity: 0.6;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
             z-index: 10;
         }
     </style>
 </head>
 <body>
-    <canvas id="background"></canvas>
-    <div class="version" id="version"></div>
+    <div id="scoreboard">玩家1分数: 0</div>
+    <canvas id="gameCanvas"></canvas>
 
     <script>
-        // 显示时间戳作为版本号
-        const versionElement = document.getElementById('version');
-        versionElement.textContent = `版本号: ${Date.now()}`;
-
-        const canvas = document.getElementById('background');
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        const particles = [];
-        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
-        let isLongPress = false; 
-        let longPressTimer;
+        // 游戏配置
+        const config = {
+            playerSpeed: 5,
+            numObstacles: 15,
+            numCollectibles: 10,
+        };
 
-        // 创建粒子
-        function createParticle(x, y, isTrail = false) {
-            particles.push({
-                x,
-                y,
-                radius: isTrail ? Math.random() * 2 + 1 : Math.random() * 5 + 3,
-                color: colors[Math.floor(Math.random() * colors.length)],
-                speedX: (Math.random() - 0.5) * 4,
-                speedY: (Math.random() - 0.5) * 4,
-                life: isTrail ? 50 : 100 // 设置生命周期
+        // 游戏状态
+        const gameState = {
+            players: [{ x: 50, y: 50, score: 0, color: 'blue' }],
+            obstacles: [],
+            collectibles: [],
+            touchStart: null,
+            touchMove: null,
+        };
+
+        // 初始化障碍物
+        function createObstacles() {
+            for (let i = 0; i < config.numObstacles; i++) {
+                gameState.obstacles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    width: Math.random() * 50 + 20,
+                    height: Math.random() * 50 + 20,
+                    color: 'red',
+                });
+            }
+        }
+
+        // 初始化可收集物
+        function createCollectibles() {
+            for (let i = 0; i < config.numCollectibles; i++) {
+                gameState.collectibles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: 10,
+                    color: 'yellow',
+                });
+            }
+        }
+
+        // 绘制玩家
+        function drawPlayers() {
+            gameState.players.forEach(player => {
+                ctx.fillStyle = player.color;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y, 15, 0, Math.PI * 2);
+                ctx.fill();
             });
         }
 
-        // 绘制和更新粒子
-        function drawParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-
-                // 绘制粒子
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = p.color;
-                ctx.fill();
-
-                // 更新粒子位置
-                p.x += p.speedX;
-                p.y += p.speedY;
-                p.life -= 1;
-
-                // 移除生命周期结束的粒子
-                if (p.life <= 0) {
-                    particles.splice(i, 1);
-                }
-            }
-
-            requestAnimationFrame(drawParticles);
+        // 绘制障碍物
+        function drawObstacles() {
+            gameState.obstacles.forEach(obstacle => {
+                ctx.fillStyle = obstacle.color;
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
         }
 
-        // 触摸事件
+        // 绘制可收集物
+        function drawCollectibles() {
+            gameState.collectibles.forEach(collectible => {
+                ctx.fillStyle = collectible.color;
+                ctx.beginPath();
+                ctx.arc(collectible.x, collectible.y, collectible.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // 检测是否吃到物品
+        function checkCollectibles(player) {
+            gameState.collectibles = gameState.collectibles.filter(collectible => {
+                const dist = Math.hypot(player.x - collectible.x, player.y - collectible.y);
+                if (dist < 15 + collectible.radius) {
+                    player.score += 1;
+                    updateScoreboard();
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        // 更新得分板
+        function updateScoreboard() {
+            const scoreboard = document.getElementById('scoreboard');
+            scoreboard.textContent = `玩家1分数: ${gameState.players[0].score}`;
+        }
+
+        // 移动玩家
+        function movePlayer(player, dx, dy) {
+            player.x += dx * config.playerSpeed;
+            player.y += dy * config.playerSpeed;
+
+            // 边界限制
+            player.x = Math.max(0, Math.min(canvas.width, player.x));
+            player.y = Math.max(0, Math.min(canvas.height, player.y));
+
+            // 检查物品收集
+            checkCollectibles(player);
+        }
+
+        // 触摸控制
         canvas.addEventListener('touchstart', (e) => {
             const touch = e.touches[0];
-            isLongPress = false;
-
-            // 启动长按定时器
-            longPressTimer = setTimeout(() => {
-                isLongPress = true;
-                // 长按特效：持续喷射粒子
-                const interval = setInterval(() => {
-                    if (!isLongPress) {
-                        clearInterval(interval);
-                    } else {
-                        for (let i = 0; i < 10; i++) {
-                            createParticle(touch.clientX, touch.clientY);
-                        }
-                    }
-                }, 100);
-            }, 500); // 长按触发时间 500ms
+            gameState.touchStart = { x: touch.clientX, y: touch.clientY };
         });
 
         canvas.addEventListener('touchmove', (e) => {
-            clearTimeout(longPressTimer); // 滑动时取消长按
-            const touch = e.touches[0];
+            if (!gameState.touchStart) return;
 
-            // 滑动特效：产生粒子轨迹
-            createParticle(touch.clientX, touch.clientY, true);
+            const touch = e.touches[0];
+            const dx = touch.clientX - gameState.touchStart.x;
+            const dy = touch.clientY - gameState.touchStart.y;
+
+            // 将触摸移动转换为玩家的移动
+            const player = gameState.players[0];
+            movePlayer(player, dx / 50, dy / 50);
+
+            // 更新触摸起点
+            gameState.touchStart = { x: touch.clientX, y: touch.clientY };
         });
 
         canvas.addEventListener('touchend', () => {
-            clearTimeout(longPressTimer);
-            isLongPress = false;
+            gameState.touchStart = null;
         });
 
-        // 响应窗口大小变化
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
+        // 游戏主循环
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPlayers();
+            drawObstacles();
+            drawCollectibles();
+            requestAnimationFrame(gameLoop);
+        }
 
-        drawParticles();
+        // 初始化游戏
+        function initGame() {
+            createObstacles();
+            createCollectibles();
+            gameLoop();
+        }
+
+        initGame();
     </script>
 </body>
 </html>
