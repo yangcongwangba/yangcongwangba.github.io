@@ -45,11 +45,14 @@
 
         const particles = [];
         const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
-        let isLongPress = false; 
+        const maxParticles = 300; // 限制最大粒子数量
+        let isLongPress = false;
         let longPressTimer;
 
         // 创建粒子
         function createParticle(x, y, isTrail = false) {
+            if (particles.length >= maxParticles) particles.shift(); // 超出限制移除最旧粒子
+
             particles.push({
                 x,
                 y,
@@ -57,7 +60,8 @@
                 color: colors[Math.floor(Math.random() * colors.length)],
                 speedX: (Math.random() - 0.5) * 4,
                 speedY: (Math.random() - 0.5) * 4,
-                life: isTrail ? 50 : 100 // 设置生命周期
+                life: isTrail ? 50 : 100, // 设置生命周期
+                opacity: 1 // 初始不透明度
             });
         }
 
@@ -70,16 +74,17 @@
                 // 绘制粒子
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = p.color;
+                ctx.fillStyle = `rgba(${hexToRgb(p.color)},${p.opacity})`;
                 ctx.fill();
 
-                // 更新粒子位置
+                // 更新粒子状态
                 p.x += p.speedX;
                 p.y += p.speedY;
                 p.life -= 1;
+                p.opacity -= 0.01; // 随时间透明度递减
 
                 // 移除生命周期结束的粒子
-                if (p.life <= 0) {
+                if (p.life <= 0 || p.opacity <= 0) {
                     particles.splice(i, 1);
                 }
             }
@@ -87,46 +92,66 @@
             requestAnimationFrame(drawParticles);
         }
 
-        // 触摸事件
-        canvas.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            isLongPress = false;
+        // 鼠标与触摸事件
+        function addEventListeners() {
+            const isTouch = 'ontouchstart' in window;
 
-            // 启动长按定时器
-            longPressTimer = setTimeout(() => {
-                isLongPress = true;
-                // 长按特效：持续喷射粒子
-                const interval = setInterval(() => {
-                    if (!isLongPress) {
-                        clearInterval(interval);
-                    } else {
-                        for (let i = 0; i < 10; i++) {
-                            createParticle(touch.clientX, touch.clientY);
+            const startEvent = isTouch ? 'touchstart' : 'mousedown';
+            const moveEvent = isTouch ? 'touchmove' : 'mousemove';
+            const endEvent = isTouch ? 'touchend' : 'mouseup';
+
+            canvas.addEventListener(startEvent, (e) => {
+                const pos = getEventPosition(e);
+                isLongPress = false;
+
+                // 启动长按定时器
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    const interval = setInterval(() => {
+                        if (!isLongPress) {
+                            clearInterval(interval);
+                        } else {
+                            for (let i = 0; i < 10; i++) {
+                                createParticle(pos.x, pos.y);
+                            }
                         }
-                    }
-                }, 100);
-            }, 500); // 长按触发时间 500ms
-        });
+                    }, 100);
+                }, 500); // 长按触发时间 500ms
+            });
 
-        canvas.addEventListener('touchmove', (e) => {
-            clearTimeout(longPressTimer); // 滑动时取消长按
-            const touch = e.touches[0];
+            canvas.addEventListener(moveEvent, (e) => {
+                clearTimeout(longPressTimer); // 滑动时取消长按
+                const pos = getEventPosition(e);
+                createParticle(pos.x, pos.y, true);
+            });
 
-            // 滑动特效：产生粒子轨迹
-            createParticle(touch.clientX, touch.clientY, true);
-        });
+            canvas.addEventListener(endEvent, () => {
+                clearTimeout(longPressTimer);
+                isLongPress = false;
+            });
 
-        canvas.addEventListener('touchend', () => {
-            clearTimeout(longPressTimer);
-            isLongPress = false;
-        });
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
 
-        // 响应窗口大小变化
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
+        // 获取事件位置
+        function getEventPosition(e) {
+            const event = e.touches ? e.touches[0] : e;
+            return { x: event.clientX, y: event.clientY };
+        }
 
+        // 将颜色转换为 RGB 格式
+        function hexToRgb(hex) {
+            const bigint = parseInt(hex.slice(1), 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return `${r},${g},${b}`;
+        }
+
+        addEventListeners();
         drawParticles();
     </script>
 </body>
