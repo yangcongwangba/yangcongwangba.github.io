@@ -1,156 +1,133 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手机避开障碍游戏</title>
+    <title>滑动与长按特效</title>
     <style>
-        body {
+        body, html {
             margin: 0;
+            padding: 0;
             overflow: hidden;
-            background-color: #f4f4f4;
+            background: black;
         }
         canvas {
-            display: block;
-            margin: 0 auto;
-            background-color: #333;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .version {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.8rem;
+            color: white;
+            opacity: 0.6;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
-<canvas id="gameCanvas"></canvas>
+    <canvas id="background"></canvas>
+    <div class="version" id="version"></div>
 
-<script src="game.js?v=1.0"></script> <!-- 添加版本号参数 -->
-<script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    <script>
+        // 显示时间戳作为版本号
+        const versionElement = document.getElementById('version');
+        versionElement.textContent = `版本号: ${Date.now()}`;
 
-    // 设置画布尺寸
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+        const canvas = document.getElementById('background');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-    // 玩家方块
-    const playerWidth = 50;
-    const playerHeight = 50;
-    let playerX = canvas.width / 2 - playerWidth / 2;
-    let playerY = canvas.height - playerHeight - 10;
-    const playerSpeed = 7;
+        const particles = [];
+        const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+        let isLongPress = false; 
+        let longPressTimer;
 
-    // 障碍物
-    const obstacleWidth = 50;
-    const obstacleHeight = 50;
-    const obstacles = [];
-    const obstacleSpeed = 4;
-    let score = 0;
-
-    // 触摸事件控制
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    // 监听触摸事件
-    canvas.addEventListener("touchstart", touchStart, false);
-    canvas.addEventListener("touchmove", touchMove, false);
-
-    function touchStart(event) {
-        touchStartX = event.touches[0].clientX;
-    }
-
-    function touchMove(event) {
-        touchEndX = event.touches[0].clientX;
-        const deltaX = touchEndX - touchStartX;
-
-        // 控制方块的左右移动
-        if (deltaX > 0) {
-            playerX += playerSpeed;
-        } else if (deltaX < 0) {
-            playerX -= playerSpeed;
+        // 创建粒子
+        function createParticle(x, y, isTrail = false) {
+            particles.push({
+                x,
+                y,
+                radius: isTrail ? Math.random() * 2 + 1 : Math.random() * 5 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speedX: (Math.random() - 0.5) * 4,
+                speedY: (Math.random() - 0.5) * 4,
+                life: isTrail ? 50 : 100 // 设置生命周期
+            });
         }
 
-        // 防止方块超出屏幕边界
-        if (playerX < 0) playerX = 0;
-        if (playerX > canvas.width - playerWidth) playerX = canvas.width - playerWidth;
+        // 绘制和更新粒子
+        function drawParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
 
-        touchStartX = touchEndX;  // 更新起始触摸位置
-    }
+                // 绘制粒子
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
 
-    // 随机生成障碍物
-    function createObstacle() {
-        const obstacleX = Math.random() * (canvas.width - obstacleWidth);
-        obstacles.push({ x: obstacleX, y: -obstacleHeight });
-    }
+                // 更新粒子位置
+                p.x += p.speedX;
+                p.y += p.speedY;
+                p.life -= 1;
 
-    // 绘制玩家方块
-    function drawPlayer() {
-        ctx.fillStyle = "#00FF00";
-        ctx.fillRect(playerX, playerY, playerWidth, playerHeight);
-    }
-
-    // 绘制障碍物
-    function drawObstacles() {
-        ctx.fillStyle = "#FF0000";
-        for (let i = 0; i < obstacles.length; i++) {
-            const o = obstacles[i];
-            ctx.fillRect(o.x, o.y, obstacleWidth, obstacleHeight);
-        }
-    }
-
-    // 更新障碍物位置
-    function updateObstacles() {
-        for (let i = 0; i < obstacles.length; i++) {
-            const o = obstacles[i];
-            o.y += obstacleSpeed;
-
-            // 检测碰撞
-            if (o.y + obstacleHeight > playerY && o.y < playerY + playerHeight &&
-                o.x + obstacleWidth > playerX && o.x < playerX + playerWidth) {
-                gameOver();
-                return;
+                // 移除生命周期结束的粒子
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                }
             }
 
-            // 移除掉出屏幕的障碍物
-            if (o.y > canvas.height) {
-                obstacles.splice(i, 1);
-                score++;
-            }
-        }
-    }
-
-    // 游戏结束
-    function gameOver() {
-        alert("游戏结束！得分：" + score);
-        resetGame();
-    }
-
-    // 重置游戏
-    function resetGame() {
-        playerX = canvas.width / 2 - playerWidth / 2;
-        playerY = canvas.height - playerHeight - 10;
-        obstacles.length = 0;
-        score = 0;
-    }
-
-    // 绘制游戏状态
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawPlayer();
-        drawObstacles();
-        updateObstacles();
-
-        // 显示得分
-        ctx.fillStyle = "#FFFFFF";
-        ctx.font = "20px Arial";
-        ctx.fillText("得分: " + score, 10, 30);
-
-        // 每隔一段时间生成新障碍物
-        if (Math.random() < 0.02) {
-            createObstacle();
+            requestAnimationFrame(drawParticles);
         }
 
-        requestAnimationFrame(draw);
-    }
+        // 触摸事件
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            isLongPress = false;
 
-    // 启动游戏
-    draw();
-</script>
+            // 启动长按定时器
+            longPressTimer = setTimeout(() => {
+                isLongPress = true;
+                // 长按特效：持续喷射粒子
+                const interval = setInterval(() => {
+                    if (!isLongPress) {
+                        clearInterval(interval);
+                    } else {
+                        for (let i = 0; i < 10; i++) {
+                            createParticle(touch.clientX, touch.clientY);
+                        }
+                    }
+                }, 100);
+            }, 500); // 长按触发时间 500ms
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            clearTimeout(longPressTimer); // 滑动时取消长按
+            const touch = e.touches[0];
+
+            // 滑动特效：产生粒子轨迹
+            createParticle(touch.clientX, touch.clientY, true);
+        });
+
+        canvas.addEventListener('touchend', () => {
+            clearTimeout(longPressTimer);
+            isLongPress = false;
+        });
+
+        // 响应窗口大小变化
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        drawParticles();
+    </script>
 </body>
 </html>
