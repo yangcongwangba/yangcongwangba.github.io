@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>滑动与长按特效</title>
+    <title>粒子特效</title>
     <style>
         body, html {
             margin: 0;
@@ -18,25 +18,17 @@
             width: 100%;
             height: 100%;
         }
-        .version {
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-            font-size: 0.8rem;
-            color: white;
-            opacity: 0.6;
-            z-index: 10;
-        }
     </style>
 </head>
 <body>
     <canvas id="background"></canvas>
-    <div class="version" id="version"></div>
 
     <script>
-        // 显示时间戳作为版本号
-        const versionElement = document.getElementById('version');
-        versionElement.textContent = `版本号: ${Date.now()}`;
+        // 配置选项
+        const config = {
+            maxParticles: 500, // 最大粒子数量
+            effectType: "sparkle", // 特效类型: "normal", "star", "sparkle"
+        };
 
         const canvas = document.getElementById('background');
         const ctx = canvas.getContext('2d');
@@ -45,23 +37,32 @@
 
         const particles = [];
         const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
-        const maxParticles = 300; // 限制最大粒子数量
         let isLongPress = false;
         let longPressTimer;
 
         // 创建粒子
         function createParticle(x, y, isTrail = false) {
-            if (particles.length >= maxParticles) particles.shift(); // 超出限制移除最旧粒子
+            if (particles.length >= config.maxParticles) particles.shift(); // 超出限制移除最旧粒子
+
+            const type = config.effectType;
+            let radius = isTrail ? Math.random() * 2 + 1 : Math.random() * 5 + 3;
+
+            if (type === "star") {
+                radius *= 1.5; // 星星效果粒子更大
+            } else if (type === "sparkle") {
+                radius *= Math.random() > 0.5 ? 2 : 0.5; // 闪烁效果大小随机
+            }
 
             particles.push({
                 x,
                 y,
-                radius: isTrail ? Math.random() * 2 + 1 : Math.random() * 5 + 3,
+                radius,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 speedX: (Math.random() - 0.5) * 4,
                 speedY: (Math.random() - 0.5) * 4,
-                life: isTrail ? 50 : 100, // 设置生命周期
-                opacity: 1 // 初始不透明度
+                life: isTrail ? 50 : 100,
+                opacity: 1,
+                type
             });
         }
 
@@ -73,15 +74,26 @@
 
                 // 绘制粒子
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${hexToRgb(p.color)},${p.opacity})`;
+                if (p.type === "star") {
+                    // 星星效果
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${hexToRgb(p.color)},${p.opacity})`;
+                } else if (p.type === "sparkle") {
+                    // 闪烁效果
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${hexToRgb(p.color)},${Math.random()})`;
+                } else {
+                    // 普通效果
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${hexToRgb(p.color)},${p.opacity})`;
+                }
                 ctx.fill();
 
                 // 更新粒子状态
                 p.x += p.speedX;
                 p.y += p.speedY;
                 p.life -= 1;
-                p.opacity -= 0.01; // 随时间透明度递减
+                p.opacity -= 0.01;
 
                 // 移除生命周期结束的粒子
                 if (p.life <= 0 || p.opacity <= 0) {
