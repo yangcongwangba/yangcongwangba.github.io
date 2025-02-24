@@ -18,13 +18,18 @@
             <h1 class="text-3xl font-bold mb-8">GitHub Pages 管理器</h1>
             <div class="max-w-md mx-auto">
                 <input type="password" id="token-input" 
-                    class="w-full p-2 mb-4 border rounded" 
+                    class="w-full p-2 mb-4 border rounded focus:border-blue-500 focus:outline-none" 
                     placeholder="输入 GitHub Personal Access Token">
-                <button id="login-btn" class="bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-700">
+                <button id="login-btn" 
+                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 
+                           disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
                     登录
                 </button>
+                <div id="login-error" class="mt-2 text-red-500 text-sm hidden"></div>
                 <p class="mt-4 text-sm text-gray-600">
-                    <a href="https://github.com/settings/tokens" target="_blank" class="text-blue-600">
+                    <a href="https://github.com/settings/tokens/new" 
+                       target="_blank" 
+                       class="text-blue-600 hover:underline">
                         创建 Personal Access Token
                     </a>
                     (需要 repo 权限)

@@ -6,7 +6,7 @@ class GitHubPagesManager {
         this.fileChangeDetector = new FileChangeDetector();
         this.setupBeforeUnload();
         this.init();
-        this.bindEvents();
+        this.setupBindings();
         this.currentPath = '';
         this.setupEditor();
         this.editor = new EditorManager(
@@ -47,6 +47,15 @@ class GitHubPagesManager {
         
         editor.addEventListener('input', () => {
             preview.innerHTML = UIHelper.renderMarkdown(editor.value);
+        });
+    }
+
+    setupBindings() {
+        this.bindEvents();
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            UIHelper.toast('操作失败: ' + (event.reason.message || '未知错误'));
         });
     }
 
@@ -102,18 +111,40 @@ class GitHubPagesManager {
     }
 
     async login() {
-        const token = document.getElementById('token-input').value.trim();
-        if (!token) return UIHelper.toast('请输入 Token');
-        
         try {
-            this.api = new GithubAPI(token);
-            await this.api.fetchAPI('/user');
+            const token = document.getElementById('token-input')?.value?.trim();
+            if (!token) {
+                UIHelper.toast('请输入 Token');
+                return;
+            }
+
+            document.getElementById('login-btn').disabled = true;
+            document.getElementById('login-btn').textContent = '登录中...';
+
+            const api = new GithubAPI(token);
+            const user = await api.fetchAPI('/user');
+            if (!user || !user.login) {
+                throw new Error('Token 验证失败');
+            }
+
             localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, token);
+            localStorage.setItem('github_user', JSON.stringify(user));
+            
             this.token = token;
+            this.api = api;
             this.showEditor();
-            this.loadFiles();
+            await this.loadFiles();
+
+            UIHelper.toast(`欢迎回来, ${user.login}!`, 'success');
         } catch (error) {
-            UIHelper.toast('登录失败: ' + error.message);
+            console.error('Login error:', error);
+            UIHelper.toast('登录失败: ' + error.message, 'error');
+        } finally {
+            const loginBtn = document.getElementById('login-btn');
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.textContent = '登录';
+            }
         }
     }
 
@@ -128,8 +159,11 @@ class GitHubPagesManager {
     }
 
     async loadFiles() {
-        PerformanceMonitor.startMeasure('loadFiles');
+        const fileList = document.getElementById('file-list');
         try {
+            fileList.innerHTML = '<div class="text-center py-4">加载中...</div>';
+            
+            PerformanceMonitor.startMeasure('loadFiles');
             const cacheKey = `files_${this.currentRepo}_${this.currentPath}`;
             const files = await CacheManager.fetchWithCache(
                 cacheKey,
@@ -140,12 +174,19 @@ class GitHubPagesManager {
             this.renderFileTree(tree);
             this.updatePathBreadcrumb();
             
-            // 更新搜索引擎
             this.searchManager = new SearchManager(this.flattenFileTree(tree));
             
             PerformanceMonitor.endMeasure('loadFiles');
         } catch (error) {
-            ErrorHandler.handle(error, 'loadFiles');
+            fileList.innerHTML = `
+                <div class="text-center py-4 text-red-500">
+                    加载失败: ${error.message}
+                    <button onclick="window.location.reload()" class="ml-2 text-blue-500">
+                        重试
+                    </button>
+                </div>
+            `;
+            throw error;
         }
     }
 
@@ -184,10 +225,8 @@ class GitHubPagesManager {
 
         breadcrumb.innerHTML = '';
         
-        // 添加根目录链接
         breadcrumb.appendChild(createPathLink('', '📂 根目录', parts.length === 0));
 
-        // 添加路径各部分
         let currentPath = '';
         parts.forEach((part, index) => {
             const separator = document.createElement('span');
@@ -242,7 +281,6 @@ class GitHubPagesManager {
                     children.appendChild(createTreeItem(child));
                 });
 
-                // 文件夹展开/折叠
                 const toggle = li.querySelector('.folder-toggle');
                 toggle.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -330,19 +368,16 @@ class GitHubPagesManager {
             }
         });
 
-        // 文件夹创建按钮
         element.querySelector('.create-file')?.addEventListener('click', (e) => {
             e.stopPropagation();
             this.showNewFileModal(item.path);
         });
 
-        // 编辑按钮
         element.querySelector('.edit')?.addEventListener('click', (e) => {
             e.stopPropagation();
             this.loadFileContent(item.path);
         });
 
-        // 删除按钮
         element.querySelector('.delete')?.addEventListener('click', (e) => {
             e.stopPropagation();
             this.confirmDelete(item);
@@ -365,7 +400,6 @@ class GitHubPagesManager {
     async deleteItem(item) {
         try {
             if (item.type === 'dir') {
-                // 递归删除文件夹内容
                 const files = await this.api.getContents(this.currentRepo, item.path);
                 for (const file of files) {
                     await this.api.deleteFile(
@@ -408,7 +442,6 @@ class GitHubPagesManager {
             const file = await this.api.getFile(this.currentRepo, path);
             this.currentFile = file;
             
-            // 检查是否是文件夹
             if (file.type === 'dir') {
                 this.currentPath = path;
                 this.loadFiles();
@@ -474,7 +507,6 @@ class GitHubPagesManager {
     async handleFileEdit(content) {
         if (!this.currentFile) return;
         
-        // 添加到历史记录
         FileHistoryManager.addToHistory(this.currentFile.path, content);
         
         this.fileChangeDetector.trackChange(
@@ -628,7 +660,6 @@ class GitHubPagesManager {
                     case 'html':
                         defaultContent = '<!DOCTYPE html>\n<html>\n<body>\n\n</body>\n</html>';
                         break;
-                    // 可以添加其他文件类型的默认内容
                 }
                 await this.api.createFile(this.currentRepo, path, defaultContent);
                 UIHelper.toast('创建文件成功');
@@ -746,7 +777,6 @@ class GitHubPagesManager {
                         break;
                 }
             } else if (e.key === 'Escape') {
-                // 关闭所有模态框
                 document.querySelectorAll('.modal').forEach(modal => 
                     modal.classList.add('hidden')
                 );
@@ -810,7 +840,7 @@ class GitHubPagesManager {
 
     setupAutoSave() {
         let autoSaveInterval = null;
-        const AUTO_SAVE_DELAY = 30000; // 30秒
+        const AUTO_SAVE_DELAY = 30000;
 
         this.editor?.addEventListener('change', () => {
             if (autoSaveInterval) clearTimeout(autoSaveInterval);
@@ -856,13 +886,11 @@ class GitHubPagesManager {
             </ul>
         `;
         
-        // 定位菜单
         menu.style.left = `${e.pageX}px`;
         menu.style.top = `${e.pageY}px`;
         
         document.body.appendChild(menu);
         
-        // 点击其他地方关闭菜单
         const closeMenu = () => {
             menu.remove();
             document.removeEventListener('click', closeMenu);
@@ -893,7 +921,23 @@ class GitHubPagesManager {
             </li>
         `;
     }
+
+    async retryOperation(operation, maxRetries = 3) {
+        let lastError;
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                return await operation();
+            } catch (error) {
+                lastError = error;
+                if (error.response?.status === 401) {
+                    this.logout();
+                    break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+            }
+        }
+        throw lastError;
+    }
 }
 
-// 等待 DOM 加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => new GitHubPagesManager());

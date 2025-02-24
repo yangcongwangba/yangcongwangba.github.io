@@ -1,6 +1,7 @@
 export class GithubAPI {
     constructor(token) {
         this.token = token;
+        this.baseURL = 'https://api.github.com';
     }
 
     async fetchAPI(path, options = {}) {
@@ -11,7 +12,7 @@ export class GithubAPI {
         };
 
         try {
-            const response = await fetch(`https://api.github.com${path}`, {
+            const response = await fetch(this.baseURL + path, {
                 ...options,
                 headers
             });
@@ -19,12 +20,15 @@ export class GithubAPI {
             const data = await response.json();
             
             if (!response.ok) {
-                throw new Error(data.message || '请求失败');
+                const error = new Error(data.message || '请求失败');
+                error.response = response;
+                error.data = data;
+                throw error;
             }
             
             return data;
         } catch (error) {
-            console.error('API Error:', error);
+            console.error(`API Error (${path}):`, error);
             throw error;
         }
     }
@@ -120,8 +124,44 @@ export class GithubAPI {
 }
 
 export class UIHelper {
+    static #toastContainer = null;
+
     static toast(message, type = 'info') {
-        alert(message);
+        if (!this.#toastContainer) {
+            this.#toastContainer = document.createElement('div');
+            this.#toastContainer.className = 'fixed bottom-4 right-4 flex flex-col gap-2 z-50';
+            document.body.appendChild(this.#toastContainer);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `
+            bg-white shadow-lg rounded-lg p-4 mb-4 flex items-center
+            transform transition-all duration-300 translate-x-full
+            ${type === 'error' ? 'border-l-4 border-red-500' : ''}
+            ${type === 'success' ? 'border-l-4 border-green-500' : ''}
+        `;
+
+        toast.innerHTML = `
+            <i class="fas fa-${this.#getIcon(type)} mr-2"></i>
+            <span>${message}</span>
+        `;
+
+        this.#toastContainer.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.remove('translate-x-full'));
+
+        setTimeout(() => {
+            toast.classList.add('translate-x-full');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    static #getIcon(type) {
+        return {
+            info: 'info-circle',
+            success: 'check-circle',
+            error: 'times-circle',
+            warning: 'exclamation-circle'
+        }[type] || 'info-circle';
     }
 
     static confirm(message) {
