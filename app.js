@@ -115,33 +115,107 @@ class GitHubPagesManager {
     async loadFiles() {
         try {
             const files = await this.api.getContents(this.currentRepo, this.currentPath);
-            this.renderFileList(files);
+            const fileTree = FileHelper.buildFileTree(files);
+            this.renderFileTree(fileTree);
             this.updateBreadcrumb();
         } catch (error) {
             UIHelper.toast('加载文件失败: ' + error.message);
         }
     }
 
-    updateBreadcrumb() {
-        const parts = this.currentPath.split('/').filter(Boolean);
-        const breadcrumb = document.getElementById('path-breadcrumb');
+    renderFileTree(tree, parentElement = document.getElementById('file-list')) {
+        parentElement.innerHTML = '';
+        const ul = document.createElement('ul');
+        ul.className = 'file-tree';
         
-        breadcrumb.innerHTML = `
-            <span class="cursor-pointer" data-path="">根目录</span>
-            ${parts.map((part, index) => `
-                <span class="mx-2">/</span>
-                <span class="cursor-pointer" data-path="${parts.slice(0, index + 1).join('/')}">
-                    ${part}
-                </span>
-            `).join('')}
+        Object.values(tree.children)
+            .sort((a, b) => {
+                if (a.type === b.type) return a.name.localeCompare(b.name);
+                return a.type === 'dir' ? -1 : 1;
+            })
+            .forEach(item => {
+                const li = this.createTreeItem(item);
+                ul.appendChild(li);
+            });
+        
+        parentElement.appendChild(ul);
+    }
+
+    createTreeItem(item) {
+        const li = document.createElement('li');
+        li.className = 'file-tree-item';
+        if (Object.keys(item.children).length > 0) li.classList.add('has-children');
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = `file-item ${this.currentFile?.path === item.path ? 'active' : ''}`;
+        itemDiv.dataset.path = item.path;
+        itemDiv.dataset.type = item.type;
+
+        const fileType = item.type === 'dir' ? 
+            { icon: 'fa-folder', color: 'text-yellow-500' } : 
+            FileHelper.getFileType(item.name);
+
+        itemDiv.innerHTML = `
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas ${fileType.icon} mr-2 ${fileType.color}"></i>
+                    <span class="truncate">${item.name}</span>
+                </div>
+                <div class="file-actions flex items-center space-x-2">
+                    ${item.type !== 'dir' ? `
+                        <button class="external-editor-button edit-external" data-path="${item.path}">
+                            <i class="fas fa-external-link-alt"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
         `;
 
-        breadcrumb.addEventListener('click', (e) => {
-            if (e.target.dataset.path !== undefined) {
-                this.currentPath = e.target.dataset.path;
-                this.loadFiles();
-            }
+        itemDiv.addEventListener('click', (e) => {
+            if (e.target.closest('.file-actions')) return;
+            this.loadFileContent(item.path);
         });
+
+        li.appendChild(itemDiv);
+
+        // 添加子项目
+        if (Object.keys(item.children).length > 0) {
+            const childrenContainer = document.createElement('div');
+            childrenContainer.className = 'file-tree-children';
+            this.renderFileTree({ children: item.children }, childrenContainer);
+            li.appendChild(childrenContainer);
+        }
+
+        // 添加外部编辑器支持
+        const editButton = itemDiv.querySelector('.edit-external');
+        if (editButton) {
+            editButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await this.openInExternalEditor(item);
+            });
+        }
+
+        return li;
+    }
+
+    async openInExternalEditor(file) {
+        try {
+            const content = await this.api.getFileContent(file.content);
+            const opened = await FileHelper.openInExternalEditor(content, file.name);
+            
+            if (opened) {
+                const cleanup = await ExternalEditorManager.watchFile(
+                    file.name,
+                    content,
+                    async (newContent) => {
+                        await this.saveFile(file.path, newContent);
+                        cleanup();
+                    }
+                );
+            }
+        } catch (error) {
+            UIHelper.toast('打开外部编辑器失败: ' + error.message);
+        }
     }
 
     async loadFileContent(path) {
@@ -212,17 +286,14 @@ class GitHubPagesManager {
         }
     }
 
-    async saveFile() {
-        if (!this.currentFile) return UIHelper.toast('请先选择文件');
-        
+    async saveFile(path, content) {
         try {
-            const content = document.getElementById('editor').value;
             await this.api.updateFile(
                 this.currentRepo,
-                this.currentFile.path,
+                path,
                 content,
                 this.currentFile.sha,
-                `Update ${this.currentFile.path}`
+                `Update ${path}`
             );
             UIHelper.toast('保存成功');
             this.loadFiles();

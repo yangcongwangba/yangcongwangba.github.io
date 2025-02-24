@@ -178,31 +178,85 @@ export class UIHelper {
 
 export class FileHelper {
     static getFileType(filename) {
-        if (!filename) return { type: 'unknown', icon: 'fa-file', preview: false };
+        if (!filename) return { type: 'unknown', icon: 'fa-file', preview: false, color: 'text-gray-400' };
         
         const ext = filename.split('.').pop()?.toLowerCase();
         const typeMap = {
-            // 文档类型
-            'md': { type: 'markdown', icon: 'fa-file-alt', preview: true, color: 'text-green-500' },
+            // 开发相关文件
             'html': { type: 'html', icon: 'fa-html5', preview: true, color: 'text-orange-500' },
-            'css': { type: 'css', icon: 'fa-css3', preview: false, color: 'text-blue-500' },
+            'css': { type: 'css', icon: 'fa-css3-alt', preview: false, color: 'text-blue-500' },
             'js': { type: 'javascript', icon: 'fa-js', preview: false, color: 'text-yellow-500' },
-            'json': { type: 'json', icon: 'fa-code', preview: false, color: 'text-purple-500' },
-            'yml': { type: 'yaml', icon: 'fa-file-code', preview: false, color: 'text-indigo-500' },
-            'yaml': { type: 'yaml', icon: 'fa-file-code', preview: false, color: 'text-indigo-500' },
+            'jsx': { type: 'react', icon: 'fa-react', preview: false, color: 'text-blue-400' },
+            'ts': { type: 'typescript', icon: 'fa-code', preview: false, color: 'text-blue-600' },
+            'tsx': { type: 'react-ts', icon: 'fa-react', preview: false, color: 'text-blue-600' },
+            'vue': { type: 'vue', icon: 'fa-vuejs', preview: false, color: 'text-green-500' },
+            'php': { type: 'php', icon: 'fa-php', preview: false, color: 'text-purple-500' },
+            'py': { type: 'python', icon: 'fa-python', preview: false, color: 'text-yellow-600' },
+            'java': { type: 'java', icon: 'fa-java', preview: false, color: 'text-red-500' },
+            
+            // 配置文件
+            'json': { type: 'json', icon: 'fa-brackets-curly', preview: false, color: 'text-yellow-400' },
+            'yml': { type: 'yaml', icon: 'fa-file-lines', preview: false, color: 'text-gray-600' },
+            'yaml': { type: 'yaml', icon: 'fa-file-lines', preview: false, color: 'text-gray-600' },
+            'xml': { type: 'xml', icon: 'fa-code', preview: false, color: 'text-orange-400' },
+            'conf': { type: 'config', icon: 'fa-cog', preview: false, color: 'text-gray-500' },
+            'env': { type: 'env', icon: 'fa-key', preview: false, color: 'text-green-600' },
+            
+            // 文档类型
+            'md': { type: 'markdown', icon: 'fa-markdown', preview: true, color: 'text-blue-500' },
+            'txt': { type: 'text', icon: 'fa-file-lines', preview: true, color: 'text-gray-500' },
+            'pdf': { type: 'pdf', icon: 'fa-file-pdf', preview: false, color: 'text-red-500' },
+            'doc': { type: 'word', icon: 'fa-file-word', preview: false, color: 'text-blue-700' },
+            'docx': { type: 'word', icon: 'fa-file-word', preview: false, color: 'text-blue-700' },
+            'xls': { type: 'excel', icon: 'fa-file-excel', preview: false, color: 'text-green-700' },
+            'xlsx': { type: 'excel', icon: 'fa-file-excel', preview: false, color: 'text-green-700' },
+            'ppt': { type: 'powerpoint', icon: 'fa-file-powerpoint', preview: false, color: 'text-red-700' },
+            'pptx': { type: 'powerpoint', icon: 'fa-file-powerpoint', preview: false, color: 'text-red-700' },
             
             // 图片类型
             'jpg': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
             'jpeg': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
             'png': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
             'gif': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
-            'svg': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
+            'svg': { type: 'svg', icon: 'fa-bezier-curve', preview: true, color: 'text-orange-500' },
+            'ico': { type: 'icon', icon: 'fa-image', preview: true, color: 'text-blue-300' },
             
-            // 其他常见类型
-            'pdf': { type: 'pdf', icon: 'fa-file-pdf', preview: false, color: 'text-red-500' },
-            'zip': { type: 'archive', icon: 'fa-file-archive', preview: false, color: 'text-yellow-700' },
-            'txt': { type: 'text', icon: 'fa-file-alt', preview: true, color: 'text-gray-500' }
+            // 字体文件
+            'ttf': { type: 'font', icon: 'fa-font', preview: false, color: 'text-purple-600' },
+            'woff': { type: 'font', icon: 'fa-font', preview: false, color: 'text-purple-600' },
+            'woff2': { type: 'font', icon: 'fa-font', preview: false, color: 'text-purple-600' },
+            'eot': { type: 'font', icon: 'fa-font', preview: false, color: 'text-purple-600' },
+            
+            // 媒体文件
+            'mp3': { type: 'audio', icon: 'fa-file-audio', preview: false, color: 'text-green-500' },
+            'wav': { type: 'audio', icon: 'fa-file-audio', preview: false, color: 'text-green-500' },
+            'mp4': { type: 'video', icon: 'fa-file-video', preview: false, color: 'text-blue-500' },
+            'avi': { type: 'video', icon: 'fa-file-video', preview: false, color: 'text-blue-500' },
+            'mov': { type: 'video', icon: 'fa-file-video', preview: false, color: 'text-blue-500' },
+            
+            // 压缩文件
+            'zip': { type: 'archive', icon: 'fa-file-zipper', preview: false, color: 'text-yellow-700' },
+            'rar': { type: 'archive', icon: 'fa-file-zipper', preview: false, color: 'text-yellow-700' },
+            '7z': { type: 'archive', icon: 'fa-file-zipper', preview: false, color: 'text-yellow-700' },
+            'tar': { type: 'archive', icon: 'fa-file-zipper', preview: false, color: 'text-yellow-700' },
+            'gz': { type: 'archive', icon: 'fa-file-zipper', preview: false, color: 'text-yellow-700' },
+            
+            // Git相关
+            'gitignore': { type: 'git', icon: 'fa-git-alt', preview: false, color: 'text-orange-600' },
+            'gitattributes': { type: 'git', icon: 'fa-git-alt', preview: false, color: 'text-orange-600' }
         };
+        
+        // 对于没有后缀的文件，尝试通过文件名匹配
+        if (!ext || !typeMap[ext]) {
+            const nameMatch = {
+                'dockerfile': { type: 'docker', icon: 'fa-docker', preview: false, color: 'text-blue-500' },
+                'license': { type: 'license', icon: 'fa-gavel', preview: true, color: 'text-gray-600' },
+                'readme': { type: 'markdown', icon: 'fa-book', preview: true, color: 'text-blue-500' }
+            };
+            
+            const lowerName = filename.toLowerCase();
+            return nameMatch[lowerName] || { type: 'unknown', icon: 'fa-file', preview: false, color: 'text-gray-400' };
+        }
         
         return typeMap[ext] || { type: 'unknown', icon: 'fa-file', preview: false, color: 'text-gray-400' };
     }
@@ -219,6 +273,108 @@ export class FileHelper {
             // 按名称排序
             return a.name.localeCompare(b.name);
         });
+    }
+
+    static getExternalEditor(filename) {
+        const ext = filename.split('.').pop()?.toLowerCase();
+        const editorMap = {
+            'md': 'markdown',
+            'txt': 'text',
+            'json': 'text',
+            'html': 'html',
+            'css': 'text',
+            'js': 'text',
+            'jpg': 'image',
+            'jpeg': 'image',
+            'png': 'image',
+            'gif': 'image'
+        };
+        return editorMap[ext] || 'text';
+    }
+
+    static async openInExternalEditor(content, filename) {
+        try {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            return true;
+        } catch (error) {
+            console.error('Failed to open external editor:', error);
+            return false;
+        }
+    }
+
+    static buildFileTree(files) {
+        const root = { children: {} };
+        
+        files.forEach(file => {
+            const parts = file.path.split('/');
+            let current = root;
+            
+            parts.forEach((part, index) => {
+                if (!current.children[part]) {
+                    current.children[part] = {
+                        name: part,
+                        path: parts.slice(0, index + 1).join('/'),
+                        type: index === parts.length - 1 ? file.type : 'dir',
+                        size: file.size,
+                        sha: file.sha,
+                        children: {}
+                    };
+                }
+                current = current.children[part];
+            });
+        });
+        
+        return root;
+    }
+}
+
+export class ExternalEditorManager {
+    static async watchFile(filename, originalContent, onSave) {
+        const checkInterval = 1000; // 每秒检查一次
+        let fileHandle;
+
+        try {
+            const options = {
+                types: [{
+                    description: 'Text Files',
+                    accept: { 'text/plain': ['.txt', '.md', '.js', '.css', '.html', '.json'] }
+                }],
+                suggestedName: filename
+            };
+
+            // 请求用户选择保存位置
+            fileHandle = await window.showSaveFilePicker(options);
+            const writable = await fileHandle.createWritable();
+            await writable.write(originalContent);
+            await writable.close();
+
+            // 开始监视文件变化
+            const intervalId = setInterval(async () => {
+                try {
+                    const file = await fileHandle.getFile();
+                    const content = await file.text();
+                    
+                    if (content !== originalContent) {
+                        await onSave(content);
+                        clearInterval(intervalId);
+                    }
+                } catch (error) {
+                    console.error('Error watching file:', error);
+                    clearInterval(intervalId);
+                }
+            }, checkInterval);
+
+            return () => clearInterval(intervalId); // 返回清理函数
+        } catch (error) {
+            console.error('Failed to set up file watching:', error);
+            return null;
+        }
     }
 }
 
