@@ -5,6 +5,8 @@ class GitHubPagesManager {
     constructor() {
         this.init();
         this.bindEvents();
+        this.currentPath = '';
+        this.setupEditor();
     }
 
     init() {
@@ -17,6 +19,15 @@ class GitHubPagesManager {
             this.showEditor();
             this.loadFiles();
         }
+    }
+
+    setupEditor() {
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        
+        editor.addEventListener('input', () => {
+            preview.innerHTML = UIHelper.renderMarkdown(editor.value);
+        });
     }
 
     bindEvents() {
@@ -67,11 +78,34 @@ class GitHubPagesManager {
 
     async loadFiles() {
         try {
-            const files = await this.api.getContents(this.currentRepo);
+            const files = await this.api.getContents(this.currentRepo, this.currentPath);
             this.renderFileList(files);
+            this.updateBreadcrumb();
         } catch (error) {
             UIHelper.toast('加载文件失败: ' + error.message);
         }
+    }
+
+    updateBreadcrumb() {
+        const parts = this.currentPath.split('/').filter(Boolean);
+        const breadcrumb = document.getElementById('path-breadcrumb');
+        
+        breadcrumb.innerHTML = `
+            <span class="cursor-pointer" data-path="">根目录</span>
+            ${parts.map((part, index) => `
+                <span class="mx-2">/</span>
+                <span class="cursor-pointer" data-path="${parts.slice(0, index + 1).join('/')}">
+                    ${part}
+                </span>
+            `).join('')}
+        `;
+
+        breadcrumb.addEventListener('click', (e) => {
+            if (e.target.dataset.path !== undefined) {
+                this.currentPath = e.target.dataset.path;
+                this.loadFiles();
+            }
+        });
     }
 
     async loadFileContent(path) {
@@ -105,27 +139,30 @@ class GitHubPagesManager {
     }
 
     async deleteFile() {
-        if (!this.currentFile) return UIHelper.toast('请先选择文件', 'warning');
-        if (!confirm('确定要删除此文件吗？')) return;
+        if (!this.currentFile) return;
+        
+        const confirmed = await UIHelper.confirm({
+            message: `确定要删除 ${this.currentFile.path} 吗？此操作不可恢复。`,
+            type: 'danger'
+        });
+
+        if (!confirmed) return;
         
         try {
-            const endpoint = CONFIG.API.ENDPOINTS.CONTENTS
-                .replace('{repo}', this.currentRepo) + '/' + this.currentFile.path;
-            
-            await this.api.fetchAPI(endpoint, {
-                method: 'DELETE',
-                body: JSON.stringify({
-                    message: `Delete ${this.currentFile.path}`,
-                    sha: this.currentFile.sha
-                })
-            });
+            await this.api.deleteFile(
+                this.currentRepo,
+                this.currentFile.path,
+                this.currentFile.sha,
+                `Delete ${this.currentFile.path}`
+            );
 
-            UIHelper.toast('删除成功', 'success');
+            UIHelper.toast('删除成功');
             this.currentFile = null;
             document.getElementById('editor').value = '';
+            document.getElementById('preview').innerHTML = '';
             this.loadFiles();
         } catch (error) {
-            UIHelper.toast(error.message, 'error');
+            UIHelper.toast('删除失败: ' + error.message);
         }
     }
 
@@ -151,6 +188,20 @@ class GitHubPagesManager {
         }
     }
 
+    async newFolder() {
+        const folderName = UIHelper.prompt('输入文件夹名称:');
+        if (!folderName) return;
+        
+        try {
+            const path = this.currentPath ? `${this.currentPath}/${folderName}` : folderName;
+            await this.api.createFolder(this.currentRepo, path);
+            UIHelper.toast('创建文件夹成功');
+            this.loadFiles();
+        } catch (error) {
+            UIHelper.toast('创建文件夹失败: ' + error.message);
+        }
+    }
+
     renderFileList(files) {
         const fileList = document.getElementById('file-list');
         const fileItems = files
@@ -162,10 +213,17 @@ class GitHubPagesManager {
     }
 
     createFileItem(file) {
+        const isFolder = file.type === 'dir';
         return `
-            <div class="file-item hover:bg-gray-100 p-2 rounded cursor-pointer" 
-                 data-path="${file.path}">
-                ${file.name}
+            <div class="file-item hover:bg-gray-100 p-2 rounded cursor-pointer flex justify-between items-center" 
+                 data-path="${file.path}" data-type="${file.type}">
+                <div class="flex items-center">
+                    <i class="fas fa-${isFolder ? 'folder' : 'file'} mr-2"></i>
+                    ${file.name}
+                </div>
+                <span class="text-gray-500 text-sm">
+                    ${!isFolder ? UIHelper.formatSize(file.size) : ''}
+                </span>
             </div>
         `;
     }
