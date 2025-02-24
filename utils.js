@@ -7,11 +7,12 @@ export class GithubAPI {
     async fetchAPI(path, options = {}) {
         const headers = {
             'Accept': 'application/vnd.github.v3+json',
-            'Authorization': `token ${this.token}`,
+            'Authorization': `Bearer ${this.token}`,
             'Content-Type': 'application/json',
         };
 
         try {
+            LoadingManager.show();
             const response = await fetch(this.baseURL + path, {
                 ...options,
                 headers
@@ -20,16 +21,18 @@ export class GithubAPI {
             const data = await response.json();
             
             if (!response.ok) {
-                const error = new Error(data.message || '请求失败');
-                error.response = response;
-                error.data = data;
-                throw error;
+                throw Object.assign(new Error(data.message || '请求失败'), {
+                    status: response.status,
+                    data
+                });
             }
             
             return data;
         } catch (error) {
             console.error(`API Error (${path}):`, error);
             throw error;
+        } finally {
+            LoadingManager.hide();
         }
     }
 
@@ -798,5 +801,53 @@ export class PerformanceMonitor {
             return duration;
         }
         return 0;
+    }
+}
+
+export class LoadingManager {
+    static show(message = '加载中...') {
+        const overlay = document.getElementById('loading-overlay');
+        const text = document.getElementById('loading-text');
+        text.textContent = message;
+        overlay.classList.remove('hidden');
+    }
+
+    static hide() {
+        const overlay = document.getElementById('loading-overlay');
+        overlay.classList.add('hidden');
+    }
+}
+
+export class AuthManager {
+    static TOKEN_KEY = 'github_token';
+    static USER_KEY = 'github_user';
+
+    static getToken() {
+        return localStorage.getItem(this.TOKEN_KEY);
+    }
+
+    static setToken(token) {
+        localStorage.setItem(this.TOKEN_KEY, token);
+    }
+
+    static clearToken() {
+        localStorage.removeItem(this.TOKEN_KEY);
+        localStorage.removeItem(this.USER_KEY);
+    }
+
+    static setUser(user) {
+        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    }
+
+    static getUser() {
+        try {
+            return JSON.parse(localStorage.getItem(this.USER_KEY));
+        } catch {
+            return null;
+        }
+    }
+
+    static isLoggedIn() {
+        return !!this.getToken();
     }
 }

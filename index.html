@@ -13,31 +13,39 @@
 </head>
 <body class="bg-gray-100">
     <div id="app" class="container mx-auto px-4 py-8">
-        <!-- 未登录状态 -->
-        <div id="login-section" class="text-center">
+        <!-- 登录界面 -->
+        <div id="login-section" class="text-center max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
             <h1 class="text-3xl font-bold mb-8">GitHub Pages 管理器</h1>
-            <div class="max-w-md mx-auto">
-                <input type="password" id="token-input" 
-                    class="w-full p-2 mb-4 border rounded focus:border-blue-500 focus:outline-none" 
-                    placeholder="输入 GitHub Personal Access Token">
-                <button id="login-btn" 
-                    class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        GitHub Personal Access Token
+                    </label>
+                    <input type="password" id="token-input" 
+                        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                        placeholder="输入 Token">
+                    <div id="login-error" class="mt-2 text-red-500 text-sm hidden"></div>
+                </div>
+                <button type="submit" id="login-btn" 
+                    class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 
                            disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
-                    登录
+                    <span class="flex items-center justify-center">
+                        <i class="fas fa-spinner fa-spin hidden mr-2"></i>
+                        <span>登录</span>
+                    </span>
                 </button>
-                <div id="login-error" class="mt-2 text-red-500 text-sm hidden"></div>
-                <p class="mt-4 text-sm text-gray-600">
+                <div class="text-sm text-gray-600">
                     <a href="https://github.com/settings/tokens/new" 
                        target="_blank" 
                        class="text-blue-600 hover:underline">
                         创建 Personal Access Token
                     </a>
-                    (需要 repo 权限)
-                </p>
-            </div>
+                    <span class="block mt-1">(需要 repo 权限)</span>
+                </div>
+            </form>
         </div>
 
-        <!-- 已登录状态 -->
+        <!-- 主界面 -->
         <div id="editor-section" class="hidden">
             <nav class="flex justify-between items-center mb-8">
                 <div class="flex items-center space-x-4">
@@ -128,6 +136,14 @@
                     <div id="upload-progress" class="bg-blue-600 h-2 rounded-full transition-all duration-300"></div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- 全局加载状态 -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-4 rounded-lg flex items-center space-x-3">
+            <i class="fas fa-spinner fa-spin text-blue-600"></i>
+            <span id="loading-text">加载中...</span>
         </div>
     </div>
 

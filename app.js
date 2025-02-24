@@ -3,21 +3,91 @@ import { GithubAPI, UIHelper, FileHelper, EditorManager } from './utils.js';
 
 class GitHubPagesManager {
     constructor() {
-        this.fileChangeDetector = new FileChangeDetector();
-        this.setupBeforeUnload();
         this.init();
-        this.setupBindings();
+        this.setupEventListeners();
+    }
+
+    init() {
+        // 检查登录状态
+        if (AuthManager.isLoggedIn()) {
+            this.initWithAuth(AuthManager.getToken());
+        }
+    }
+
+    setupEventListeners() {
+        // 登录表单处理
+        document.getElementById('login-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.handleLogin();
+        });
+
+        // 登出按钮
+        document.getElementById('logout-btn')?.addEventListener('click', () => this.handleLogout());
+    }
+
+    async handleLogin() {
+        const loginBtn = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error');
+        const spinner = loginBtn.querySelector('.fa-spinner');
+        const token = document.getElementById('token-input').value.trim();
+
+        if (!token) {
+            this.showLoginError('请输入 Token');
+            return;
+        }
+
+        try {
+            loginBtn.disabled = true;
+            spinner.classList.remove('hidden');
+            loginError.classList.add('hidden');
+
+            const api = new GithubAPI(token);
+            const user = await api.fetchAPI('/user');
+
+            AuthManager.setToken(token);
+            AuthManager.setUser(user);
+
+            await this.initWithAuth(token);
+            
+            UIHelper.toast(`欢迎回来, ${user.login}!`, 'success');
+        } catch (error) {
+            console.error('Login failed:', error);
+            this.showLoginError(error.message || '登录失败，请检查 Token 是否正确');
+        } finally {
+            loginBtn.disabled = false;
+            spinner.classList.add('hidden');
+        }
+    }
+
+    showLoginError(message) {
+        const loginError = document.getElementById('login-error');
+        loginError.textContent = message;
+        loginError.classList.remove('hidden');
+    }
+
+    handleLogout() {
+        AuthManager.clearToken();
+        location.reload();
+    }
+
+    async initWithAuth(token) {
+        this.api = new GithubAPI(token);
         this.currentPath = '';
+        this.currentFile = null;
+
+        // 初始化组件
+        this.fileChangeDetector = new FileChangeDetector();
         this.setupEditor();
-        this.editor = new EditorManager(
-            document.getElementById('editor-container'),
-            content => this.handleEditorChange(content)
-        );
-        this.bindFileUpload();
-        this.setupShortcuts();
-        this.searchManager = null;
         this.setupSearch();
         this.setupAutoSave();
+        this.setupShortcuts();
+        
+        // 显示主界面
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('editor-section').classList.remove('hidden');
+        
+        // 加载文件列表
+        await this.loadFiles();
     }
 
     setupBeforeUnload() {
@@ -27,18 +97,6 @@ class GitHubPagesManager {
                 e.returnValue = '有未保存的更改，确定要离开吗？';
             }
         });
-    }
-
-    init() {
-        this.token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
-        this.currentRepo = CONFIG.DEFAULT_REPO;
-        this.currentFile = null;
-        
-        if (this.token) {
-            this.api = new GithubAPI(this.token);
-            this.showEditor();
-            this.loadFiles();
-        }
     }
 
     setupEditor() {
@@ -940,4 +998,10 @@ class GitHubPagesManager {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => new GitHubPagesManager());
+// 防止 DOMContentLoaded 重复执行
+let app;
+document.addEventListener('DOMContentLoaded', () => {
+    if (!app) {
+        app = new GitHubPagesManager();
+    }
+});
