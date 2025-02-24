@@ -3,6 +3,12 @@ export const CONFIG = {
         TOKEN: 'github_token',
         REPO: 'github_repo'
     },
-    // 修改这里为你的 GitHub 用户名和仓库名
+    API: {
+        BASE: 'https://api.github.com',
+        ENDPOINTS: {
+            USER: '/user',
+            CONTENTS: '/repos/{repo}/contents'
+        }
+    },
     DEFAULT_REPO: 'yangcongwangba/yangcongwangba.github.io'
 };

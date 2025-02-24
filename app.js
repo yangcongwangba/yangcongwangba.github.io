@@ -149,11 +149,16 @@ class GitHubPagesManager {
             const file = await this.api.getFile(this.currentRepo, path);
             this.currentFile = file;
             
-            // 优化文件内容加载
+            // 检查是否是文件夹
+            if (file.type === 'dir') {
+                this.currentPath = path;
+                this.loadFiles();
+                return;
+            }
+            
             const content = await this.api.getFileContent(file.content);
             const fileType = FileHelper.getFileType(file.name);
             
-            // 等待编辑器初始化完成
             await this.ensureEditor();
             
             this.editor.setContent(content, fileType.type);
@@ -329,29 +334,76 @@ class GitHubPagesManager {
 
     renderFileList(files) {
         const fileList = document.getElementById('file-list');
-        const sortedFiles = FileHelper.sortFiles(files);
+        const { folders, documents } = this.groupFiles(files);
         
-        const fileItems = sortedFiles.map(file => {
-            const isFolder = file.type === 'dir';
-            const fileType = isFolder ? { icon: 'fa-folder' } : FileHelper.getFileType(file.name);
-            
-            return `
-                <div class="file-item hover:bg-gray-100 p-2 rounded cursor-pointer flex justify-between items-center ${this.currentFile?.path === file.path ? 'bg-blue-50' : ''}" 
-                     data-path="${file.path}" data-type="${file.type}">
-                    <div class="flex items-center">
-                        <i class="fas ${fileType.icon} mr-2 ${isFolder ? 'text-yellow-500' : ''} ${this.getFileIconColor(file.name)}"></i>
-                        <span class="truncate">${file.name}</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <span class="text-gray-500 text-sm">
-                            ${!isFolder ? UIHelper.formatSize(file.size) : ''}
-                        </span>
-                    </div>
+        fileList.innerHTML = `
+            ${this.renderFolderSection(folders)}
+            ${this.renderFileSection(documents)}
+        `;
+    }
+
+    groupFiles(files) {
+        return files.reduce((acc, file) => {
+            if (file.type === 'dir') {
+                acc.folders.push(file);
+            } else {
+                acc.documents.push(file);
+            }
+            return acc;
+        }, { folders: [], documents: [] });
+    }
+
+    renderFolderSection(folders) {
+        if (!folders.length) return '';
+        
+        return `
+            <div class="mb-4">
+                <div class="text-sm font-semibold text-gray-500 mb-2">文件夹</div>
+                ${folders.sort((a, b) => a.name.localeCompare(b.name))
+                    .map(folder => this.createFileItem(folder, true))
+                    .join('')}
+            </div>
+        `;
+    }
+
+    renderFileSection(files) {
+        if (!files.length) return '';
+        
+        return `
+            <div>
+                <div class="text-sm font-semibold text-gray-500 mb-2">文件</div>
+                ${files.sort((a, b) => a.name.localeCompare(b.name))
+                    .map(file => this.createFileItem(file, false))
+                    .join('')}
+            </div>
+        `;
+    }
+
+    createFileItem(file, isFolder) {
+        const fileType = isFolder ? 
+            { icon: 'fa-folder', color: 'text-yellow-500' } : 
+            FileHelper.getFileType(file.name);
+
+        return `
+            <div class="file-item hover:bg-gray-100 p-2 rounded cursor-pointer flex justify-between items-center 
+                ${this.currentFile?.path === file.path ? 'bg-blue-50' : ''}" 
+                data-path="${file.path}" data-type="${file.type}">
+                <div class="flex items-center">
+                    <i class="fas ${fileType.icon} mr-2 ${fileType.color}"></i>
+                    <span class="truncate">${file.name}</span>
                 </div>
-            `;
-        }).join('');
-            
-        fileList.innerHTML = fileItems;
+                <div class="flex items-center space-x-2">
+                    ${!isFolder ? `
+                        <span class="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">
+                            ${FileHelper.getFileType(file.name).type}
+                        </span>
+                        <span class="text-gray-500 text-sm">
+                            ${UIHelper.formatSize(file.size)}
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+        `;
     }
 
     getFileIconColor(filename) {

@@ -98,11 +98,11 @@ export class GithubAPI {
     // 优化文件内容读取方法
     async getFileContent(content, encoding = 'utf-8') {
         try {
-            const decoded = atob(content);
-            if (encoding === 'utf-8') {
-                return decodeURIComponent(escape(decoded));
-            }
-            return decoded;
+            // 修复 base64 解码问题
+            const decoded = atob(content.replace(/\s/g, ''));
+            return new TextDecoder(encoding).decode(
+                new Uint8Array([...decoded].map(c => c.charCodeAt(0)))
+            );
         } catch (error) {
             console.error('Content decode error:', error);
             return content;
@@ -178,22 +178,33 @@ export class UIHelper {
 
 export class FileHelper {
     static getFileType(filename) {
-        const ext = filename.split('.').pop().toLowerCase();
+        if (!filename) return { type: 'unknown', icon: 'fa-file', preview: false };
+        
+        const ext = filename.split('.').pop()?.toLowerCase();
         const typeMap = {
-            'md': { type: 'markdown', icon: 'fa-markdown', preview: true },
-            'html': { type: 'html', icon: 'fa-html5', preview: true },
-            'css': { type: 'css', icon: 'fa-css3', preview: false },
-            'js': { type: 'javascript', icon: 'fa-js', preview: false },
-            'json': { type: 'json', icon: 'fa-code', preview: false },
-            'yml': { type: 'yaml', icon: 'fa-file-code', preview: false },
-            'yaml': { type: 'yaml', icon: 'fa-file-code', preview: false },
-            'txt': { type: 'text', icon: 'fa-file-alt', preview: false },
-            'jpg': { type: 'image', icon: 'fa-image', preview: true },
-            'jpeg': { type: 'image', icon: 'fa-image', preview: true },
-            'png': { type: 'image', icon: 'fa-image', preview: true },
-            'gif': { type: 'image', icon: 'fa-image', preview: true }
+            // 文档类型
+            'md': { type: 'markdown', icon: 'fa-file-alt', preview: true, color: 'text-green-500' },
+            'html': { type: 'html', icon: 'fa-html5', preview: true, color: 'text-orange-500' },
+            'css': { type: 'css', icon: 'fa-css3', preview: false, color: 'text-blue-500' },
+            'js': { type: 'javascript', icon: 'fa-js', preview: false, color: 'text-yellow-500' },
+            'json': { type: 'json', icon: 'fa-code', preview: false, color: 'text-purple-500' },
+            'yml': { type: 'yaml', icon: 'fa-file-code', preview: false, color: 'text-indigo-500' },
+            'yaml': { type: 'yaml', icon: 'fa-file-code', preview: false, color: 'text-indigo-500' },
+            
+            // 图片类型
+            'jpg': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
+            'jpeg': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
+            'png': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
+            'gif': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
+            'svg': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
+            
+            // 其他常见类型
+            'pdf': { type: 'pdf', icon: 'fa-file-pdf', preview: false, color: 'text-red-500' },
+            'zip': { type: 'archive', icon: 'fa-file-archive', preview: false, color: 'text-yellow-700' },
+            'txt': { type: 'text', icon: 'fa-file-alt', preview: true, color: 'text-gray-500' }
         };
-        return typeMap[ext] || { type: 'text', icon: 'fa-file', preview: false };
+        
+        return typeMap[ext] || { type: 'unknown', icon: 'fa-file', preview: false, color: 'text-gray-400' };
     }
 
     static isFolder(path) {
