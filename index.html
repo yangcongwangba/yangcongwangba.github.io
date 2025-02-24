@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages 管理器</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- 未登录状态 -->
+        <div id="login-section" class="text-center">
+            <h1 class="text-3xl font-bold mb-8">GitHub Pages 管理器</h1>
+            <div class="max-w-md mx-auto">
+                <input type="password" id="token-input" 
+                    class="w-full p-2 mb-4 border rounded" 
+                    placeholder="输入 GitHub Personal Access Token">
+                <button id="login-btn" class="bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-700">
+                    登录
+                </button>
+                <p class="mt-4 text-sm text-gray-600">
+                    <a href="https://github.com/settings/tokens" target="_blank" class="text-blue-600">
+                        创建 Personal Access Token
+                    </a>
+                    (需要 repo 权限)
+                </p>
+            </div>
+        </div>
+
+        <!-- 已登录状态 -->
+        <div id="editor-section" class="hidden">
+            <nav class="flex justify-between items-center mb-8">
+                <h1 class="text-2xl font-bold">页面管理</h1>
+                <button id="logout-btn" class="text-red-600 hover:text-red-800">退出登录</button>
+            </nav>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 文件列表 -->
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">文件列表</h2>
+                    <div id="file-list" class="space-y-2"></div>
+                    <button id="new-file-btn" class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                        新建文件
+                    </button>
+                </div>
+
+                <!-- 编辑器 -->
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h2 class="text-xl font-semibold mb-4">编辑器</h2>
+                    <textarea id="editor" class="w-full h-64 p-2 border rounded"></textarea>
+                    <div class="mt-4 flex justify-end space-x-2">
+                        <button id="save-btn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">保存</button>
+                        <button id="delete-btn" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">删除</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="config.js" type="module"></script>
+    <script src="utils.js" type="module"></script>
+    <script src="app.js" type="module"></script>
+</body>
+</html>
