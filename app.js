@@ -1,5 +1,5 @@
 import { CONFIG } from './config.js';
-import { GithubAPI, UIHelper } from './utils.js';
+import { GithubAPI, UIHelper, FileHelper, EditorManager } from './utils.js';
 
 class GitHubPagesManager {
     constructor() {
@@ -7,6 +7,10 @@ class GitHubPagesManager {
         this.bindEvents();
         this.currentPath = '';
         this.setupEditor();
+        this.editor = new EditorManager(
+            document.getElementById('editor-container'),
+            content => this.handleEditorChange(content)
+        );
     }
 
     init() {
@@ -113,9 +117,41 @@ class GitHubPagesManager {
             const file = await this.api.getFile(this.currentRepo, path);
             this.currentFile = file;
             const content = decodeURIComponent(escape(atob(file.content)));
-            document.getElementById('editor').value = content;
+            const fileType = FileHelper.getFileType(file.name);
+            
+            this.editor.setContent(content, fileType.type);
+            document.getElementById('current-file-name').textContent = file.name;
+            document.getElementById('file-type-badge').textContent = fileType.type;
+            this.handleEditorChange(content);
         } catch (error) {
             UIHelper.toast('加载文件内容失败: ' + error.message);
+        }
+    }
+
+    handleEditorChange(content) {
+        const preview = document.getElementById('preview-container');
+        if (!this.currentFile) return;
+        
+        const fileType = FileHelper.getFileType(this.currentFile.name);
+        if (fileType.preview) {
+            switch (fileType.type) {
+                case 'markdown':
+                    preview.innerHTML = marked.parse(content);
+                    preview.classList.remove('hidden');
+                    break;
+                case 'html':
+                    preview.innerHTML = content;
+                    preview.classList.remove('hidden');
+                    break;
+                case 'image':
+                    preview.innerHTML = `<img src="data:image;base64,${content}" alt="Preview">`;
+                    preview.classList.remove('hidden');
+                    break;
+                default:
+                    preview.classList.add('hidden');
+            }
+        } else {
+            preview.classList.add('hidden');
         }
     }
 
@@ -202,30 +238,64 @@ class GitHubPagesManager {
         }
     }
 
-    renderFileList(files) {
-        const fileList = document.getElementById('file-list');
-        const fileItems = files
-            .filter(file => file.type === 'file')
-            .map(file => this.createFileItem(file))
-            .join('');
-            
-        fileList.innerHTML = fileItems;
+    showNewFileModal() {
+        const modal = document.getElementById('new-file-modal');
+        const input = document.getElementById('new-file-name');
+        modal.classList.remove('hidden');
+        input.value = '';
+        input.focus();
     }
 
-    createFileItem(file) {
-        const isFolder = file.type === 'dir';
-        return `
-            <div class="file-item hover:bg-gray-100 p-2 rounded cursor-pointer flex justify-between items-center" 
-                 data-path="${file.path}" data-type="${file.type}">
-                <div class="flex items-center">
-                    <i class="fas fa-${isFolder ? 'folder' : 'file'} mr-2"></i>
-                    ${file.name}
+    async createNewFile(name) {
+        if (!name) return;
+        
+        try {
+            const path = this.currentPath ? `${this.currentPath}/${name}` : name;
+            if (FileHelper.isFolder(name)) {
+                await this.api.createFolder(this.currentRepo, path);
+                UIHelper.toast('创建文件夹成功');
+            } else {
+                const fileType = FileHelper.getFileType(name);
+                let defaultContent = '';
+                switch (fileType.type) {
+                    case 'markdown':
+                        defaultContent = '# New Markdown File';
+                        break;
+                    case 'html':
+                        defaultContent = '<!DOCTYPE html>\n<html>\n<body>\n\n</body>\n</html>';
+                        break;
+                    // 可以添加其他文件类型的默认内容
+                }
+                await this.api.createFile(this.currentRepo, path, defaultContent);
+                UIHelper.toast('创建文件成功');
+            }
+            this.loadFiles();
+        } catch (error) {
+            UIHelper.toast('创建失败: ' + error.message);
+        }
+    }
+
+    renderFileList(files) {
+        const fileList = document.getElementById('file-list');
+        const sortedFiles = FileHelper.sortFiles(files);
+        
+        fileList.innerHTML = sortedFiles.map(file => {
+            const isFolder = file.type === 'dir';
+            const fileType = isFolder ? { icon: 'fa-folder' } : FileHelper.getFileType(file.name);
+            
+            return `
+                <div class="file-item hover:bg-gray-100 p-2 rounded cursor-pointer flex justify-between items-center" 
+                     data-path="${file.path}" data-type="${file.type}">
+                    <div class="flex items-center">
+                        <i class="fas ${fileType.icon} mr-2 ${isFolder ? 'text-yellow-500' : ''}"></i>
+                        <span class="truncate">${file.name}</span>
+                    </div>
+                    <span class="text-gray-500 text-sm">
+                        ${!isFolder ? UIHelper.formatSize(file.size) : ''}
+                    </span>
                 </div>
-                <span class="text-gray-500 text-sm">
-                    ${!isFolder ? UIHelper.formatSize(file.size) : ''}
-                </span>
-            </div>
-        `;
+            `;
+        }).join('');
     }
 }
 

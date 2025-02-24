@@ -137,3 +137,81 @@ export class UIHelper {
         return `${size.toFixed(1)} ${units[unitIndex]}`;
     }
 }
+
+export class FileHelper {
+    static getFileType(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const typeMap = {
+            'md': { type: 'markdown', icon: 'fa-markdown', preview: true },
+            'html': { type: 'html', icon: 'fa-html5', preview: true },
+            'css': { type: 'css', icon: 'fa-css3', preview: false },
+            'js': { type: 'javascript', icon: 'fa-js', preview: false },
+            'json': { type: 'json', icon: 'fa-code', preview: false },
+            'yml': { type: 'yaml', icon: 'fa-file-code', preview: false },
+            'yaml': { type: 'yaml', icon: 'fa-file-code', preview: false },
+            'txt': { type: 'text', icon: 'fa-file-alt', preview: false },
+            'jpg': { type: 'image', icon: 'fa-image', preview: true },
+            'jpeg': { type: 'image', icon: 'fa-image', preview: true },
+            'png': { type: 'image', icon: 'fa-image', preview: true },
+            'gif': { type: 'image', icon: 'fa-image', preview: true }
+        };
+        return typeMap[ext] || { type: 'text', icon: 'fa-file', preview: false };
+    }
+
+    static isFolder(path) {
+        return !path.includes('.');
+    }
+
+    static sortFiles(files) {
+        return files.sort((a, b) => {
+            // 文件夹优先
+            if (a.type === 'dir' && b.type !== 'dir') return -1;
+            if (a.type !== 'dir' && b.type === 'dir') return 1;
+            // 按名称排序
+            return a.name.localeCompare(b.name);
+        });
+    }
+}
+
+export class EditorManager {
+    constructor(container, onChange) {
+        this.container = container;
+        this.onChange = onChange;
+        this.editor = null;
+        this.init();
+    }
+
+    async init() {
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.33.0/min/vs' }});
+        
+        require(['vs/editor/editor.main'], () => {
+            this.editor = monaco.editor.create(this.container, {
+                language: 'markdown',
+                theme: 'vs',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontSize: 14,
+                lineNumbers: 'on',
+                wordWrap: 'on',
+                scrollBeyondLastLine: false,
+            });
+
+            this.editor.onDidChangeModelContent(() => {
+                if (this.onChange) {
+                    this.onChange(this.editor.getValue());
+                }
+            });
+        });
+    }
+
+    setContent(content, language) {
+        if (!this.editor) return;
+        const model = this.editor.getModel();
+        monaco.editor.setModelLanguage(model, language);
+        this.editor.setValue(content);
+    }
+
+    getValue() {
+        return this.editor?.getValue() || '';
+    }
+}
