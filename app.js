@@ -15,6 +15,9 @@ class GitHubPagesManager {
         );
         this.bindFileUpload();
         this.setupShortcuts();
+        this.searchManager = null;
+        this.setupSearch();
+        this.setupAutoSave();
     }
 
     setupBeforeUnload() {
@@ -125,6 +128,7 @@ class GitHubPagesManager {
     }
 
     async loadFiles() {
+        PerformanceMonitor.startMeasure('loadFiles');
         try {
             const cacheKey = `files_${this.currentRepo}_${this.currentPath}`;
             const files = await CacheManager.fetchWithCache(
@@ -135,9 +139,30 @@ class GitHubPagesManager {
             const tree = FileHelper.buildTreeStructure(files, this.currentPath);
             this.renderFileTree(tree);
             this.updatePathBreadcrumb();
+            
+            // 更新搜索引擎
+            this.searchManager = new SearchManager(this.flattenFileTree(tree));
+            
+            PerformanceMonitor.endMeasure('loadFiles');
         } catch (error) {
             ErrorHandler.handle(error, 'loadFiles');
         }
+    }
+
+    flattenFileTree(tree) {
+        const result = [];
+        const traverse = (node) => {
+            result.push({
+                name: node.name,
+                path: node.path,
+                type: node.type
+            });
+            if (node.children) {
+                Object.values(node.children).forEach(traverse);
+            }
+        };
+        traverse(tree);
+        return result;
     }
 
     updatePathBreadcrumb() {
@@ -448,6 +473,9 @@ class GitHubPagesManager {
 
     async handleFileEdit(content) {
         if (!this.currentFile) return;
+        
+        // 添加到历史记录
+        FileHistoryManager.addToHistory(this.currentFile.path, content);
         
         this.fileChangeDetector.trackChange(
             this.currentFile.path,
@@ -767,6 +795,103 @@ class GitHubPagesManager {
             dropZone.classList.remove('drag-active');
             const files = Array.from(e.dataTransfer.files);
         });
+    }
+
+    setupSearch() {
+        const searchInput = document.getElementById('file-filter');
+        searchInput.addEventListener('input', debounce((e) => {
+            if (!this.searchManager) return;
+            
+            const query = e.target.value.trim();
+            const results = this.searchManager.search(query);
+            this.renderSearchResults(results);
+        }, 300));
+    }
+
+    setupAutoSave() {
+        let autoSaveInterval = null;
+        const AUTO_SAVE_DELAY = 30000; // 30秒
+
+        this.editor?.addEventListener('change', () => {
+            if (autoSaveInterval) clearTimeout(autoSaveInterval);
+            
+            autoSaveInterval = setTimeout(() => {
+                if (this.fileChangeDetector.hasUnsavedChanges()) {
+                    this.saveAllChanges();
+                }
+            }, AUTO_SAVE_DELAY);
+        });
+    }
+
+    renderSearchResults(results) {
+        const fileList = document.getElementById('file-list');
+        if (!results.length) {
+            fileList.innerHTML = '<div class="text-gray-500 text-center py-4">没有找到匹配的文件</div>';
+            return;
+        }
+        
+        const { folders, files } = results.reduce((acc, item) => {
+            if (item.type === 'dir') {
+                acc.folders.push(item);
+            } else {
+                acc.files.push(item);
+            }
+            return acc;
+        }, { folders: [], files: [] });
+
+        fileList.innerHTML = `
+            ${this.renderFolderSection(folders)}
+            ${this.renderFileSection(files)}
+        `;
+    }
+
+    showContextMenu(e, item) {
+        e.preventDefault();
+        
+        const menu = document.createElement('div');
+        menu.className = 'context-menu';
+        menu.innerHTML = `
+            <ul class="bg-white shadow-lg rounded-lg py-2">
+                ${this.getContextMenuItems(item)}
+            </ul>
+        `;
+        
+        // 定位菜单
+        menu.style.left = `${e.pageX}px`;
+        menu.style.top = `${e.pageY}px`;
+        
+        document.body.appendChild(menu);
+        
+        // 点击其他地方关闭菜单
+        const closeMenu = () => {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+        };
+        setTimeout(() => document.addEventListener('click', closeMenu), 0);
+    }
+
+    getContextMenuItems(item) {
+        const isFolder = item.type === 'dir';
+        return `
+            ${isFolder ? `
+                <li class="menu-item" data-action="new-file">
+                    <i class="fas fa-plus mr-2"></i>新建文件
+                </li>
+                <li class="menu-item" data-action="new-folder">
+                    <i class="fas fa-folder-plus mr-2"></i>新建文件夹
+                </li>
+            ` : `
+                <li class="menu-item" data-action="edit">
+                    <i class="fas fa-edit mr-2"></i>编辑
+                </li>
+                <li class="menu-item" data-action="download">
+                    <i class="fas fa-download mr-2"></i>下载
+                </li>
+            `}
+            <li class="menu-item text-red-600" data-action="delete">
+                <i class="fas fa-trash mr-2"></i>删除
+            </li>
+        `;
     }
 }
 

@@ -312,3 +312,82 @@
     background-color: #f3f4f6;
     color: var(--text-color);
 }
+
+/* 右键菜单样式 */
+.context-menu {
+    position: fixed;
+    z-index: 1000;
+}
+
+.menu-item {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.menu-item:hover {
+    background-color: var(--hover-color);
+}
+
+/* 通知样式 */
+.notification {
+    opacity: 0;
+    transform: translateX(100%);
+    animation: slideIn 0.3s forwards;
+}
+
+.notification.info { border-left: 4px solid var(--primary-color); }
+.notification.success { border-left: 4px solid #10B981; }
+.notification.warning { border-left: 4px solid #F59E0B; }
+.notification.error { border-left: 4px solid #EF4444; }
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 搜索结果高亮 */
+.search-highlight {
+    background-color: #FEFCE8;
+    padding: 0.1em 0.2em;
+    border-radius: 0.2em;
+}
+
+/* 文件历史记录 */
+.history-item {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.history-item:hover {
+    background-color: var(--hover-color);
+}
+
+.history-timestamp {
+    font-size: 0.8rem;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+/* 性能指示器 */
+.performance-indicator {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    pointer-events: none;
+    opacity: 0.7;
+}

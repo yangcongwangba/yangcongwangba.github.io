@@ -631,3 +631,132 @@ export class PathHelper {
         return childPath.startsWith(parentPath + '/');
     }
 }
+
+export class FileHistoryManager {
+    static HISTORY_KEY = 'ghp_history_';
+    static MAX_HISTORY = 50;
+
+    static addToHistory(path, content) {
+        const key = this.HISTORY_KEY + path;
+        const history = this.getHistory(path);
+        history.unshift({
+            content,
+            timestamp: Date.now()
+        });
+        
+        // 保留最近的历史记录
+        if (history.length > this.MAX_HISTORY) {
+            history.pop();
+        }
+        
+        localStorage.setItem(key, JSON.stringify(history));
+    }
+
+    static getHistory(path) {
+        const key = this.HISTORY_KEY + path;
+        try {
+            return JSON.parse(localStorage.getItem(key) || '[]');
+        } catch {
+            return [];
+        }
+    }
+
+    static clearHistory(path) {
+        if (path) {
+            localStorage.removeItem(this.HISTORY_KEY + path);
+        } else {
+            Object.keys(localStorage)
+                .filter(key => key.startsWith(this.HISTORY_KEY))
+                .forEach(key => localStorage.removeItem(key));
+        }
+    }
+}
+
+export class NotificationManager {
+    static TIMEOUT = 3000;
+    static queue = [];
+    static container = null;
+
+    static init() {
+        this.container = document.createElement('div');
+        this.container.className = 'fixed bottom-4 right-4 flex flex-col gap-2';
+        document.body.appendChild(this.container);
+    }
+
+    static show(message, type = 'info') {
+        if (!this.container) this.init();
+        
+        const notification = document.createElement('div');
+        notification.className = `
+            notification ${type} transform transition-all duration-300
+            bg-white shadow-lg rounded-lg p-4 flex items-center
+            translate-x-full
+        `;
+        
+        notification.innerHTML = `
+            <i class="fas fa-${this.getIcon(type)} mr-2"></i>
+            <span>${message}</span>
+        `;
+
+        this.container.appendChild(notification);
+        requestAnimationFrame(() => {
+            notification.classList.remove('translate-x-full');
+        });
+
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => notification.remove(), 300);
+        }, this.TIMEOUT);
+    }
+
+    static getIcon(type) {
+        const icons = {
+            info: 'info-circle',
+            success: 'check-circle',
+            warning: 'exclamation-circle',
+            error: 'times-circle'
+        };
+        return icons[type] || icons.info;
+    }
+}
+
+export class SearchManager {
+    constructor(items, options = {}) {
+        this.items = items;
+        this.options = {
+            keys: ['name', 'path'],
+            threshold: 0.4,
+            ...options
+        };
+        this.fuse = new Fuse(items, this.options);
+    }
+
+    search(query) {
+        if (!query) return this.items;
+        return this.fuse.search(query).map(result => result.item);
+    }
+
+    updateItems(items) {
+        this.items = items;
+        this.fuse.setCollection(items);
+    }
+}
+
+export class PerformanceMonitor {
+    static metrics = new Map();
+
+    static startMeasure(name) {
+        this.metrics.set(name, performance.now());
+    }
+
+    static endMeasure(name) {
+        const start = this.metrics.get(name);
+        if (start) {
+            const duration = performance.now() - start;
+            this.metrics.delete(name);
+            console.debug(`Performance [${name}]: ${duration.toFixed(2)}ms`);
+            return duration;
+        }
+        return 0;
+    }
+}
