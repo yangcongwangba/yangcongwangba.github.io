@@ -3,6 +3,8 @@ import { GithubAPI, UIHelper, FileHelper, EditorManager } from './utils.js';
 
 class GitHubPagesManager {
     constructor() {
+        this.fileChangeDetector = new FileChangeDetector();
+        this.setupBeforeUnload();
         this.init();
         this.bindEvents();
         this.currentPath = '';
@@ -12,6 +14,16 @@ class GitHubPagesManager {
             content => this.handleEditorChange(content)
         );
         this.bindFileUpload();
+        this.setupShortcuts();
+    }
+
+    setupBeforeUnload() {
+        window.addEventListener('beforeunload', (e) => {
+            if (this.fileChangeDetector.hasUnsavedChanges()) {
+                e.preventDefault();
+                e.returnValue = '有未保存的更改，确定要离开吗？';
+            }
+        });
     }
 
     init() {
@@ -114,13 +126,57 @@ class GitHubPagesManager {
 
     async loadFiles() {
         try {
-            const files = await this.api.getContents(this.currentRepo, this.currentPath);
-            const tree = FileHelper.buildFileTree(files, this.currentPath);
-            this.renderTree(tree);
-            this.updateBreadcrumb();
+            const cacheKey = `files_${this.currentRepo}_${this.currentPath}`;
+            const files = await CacheManager.fetchWithCache(
+                cacheKey,
+                () => this.api.getContents(this.currentRepo, this.currentPath)
+            );
+
+            const tree = FileHelper.buildTreeStructure(files, this.currentPath);
+            this.renderFileTree(tree);
+            this.updatePathBreadcrumb();
         } catch (error) {
-            UIHelper.toast('加载文件失败: ' + error.message);
+            ErrorHandler.handle(error, 'loadFiles');
         }
+    }
+
+    updatePathBreadcrumb() {
+        const breadcrumb = document.getElementById('path-breadcrumb');
+        const parts = this.currentPath.split('/').filter(Boolean);
+        
+        const createPathLink = (path, name, isLast) => {
+            const span = document.createElement('span');
+            span.className = `${isLast ? 'text-gray-600' : 'text-blue-600 cursor-pointer hover:text-blue-800'}`;
+            span.textContent = name;
+            if (!isLast) {
+                span.onclick = () => {
+                    this.currentPath = path;
+                    this.loadFiles();
+                };
+            }
+            return span;
+        };
+
+        breadcrumb.innerHTML = '';
+        
+        // 添加根目录链接
+        breadcrumb.appendChild(createPathLink('', '📂 根目录', parts.length === 0));
+
+        // 添加路径各部分
+        let currentPath = '';
+        parts.forEach((part, index) => {
+            const separator = document.createElement('span');
+            separator.textContent = ' / ';
+            separator.className = 'text-gray-400 mx-1';
+            breadcrumb.appendChild(separator);
+
+            currentPath = currentPath ? `${currentPath}/${part}` : part;
+            breadcrumb.appendChild(createPathLink(
+                currentPath,
+                index === parts.length - 1 ? `📂 ${part}` : part,
+                index === parts.length - 1
+            ));
+        });
     }
 
     renderTree(tree, parentElement = document.getElementById('file-list')) {
@@ -130,8 +186,54 @@ class GitHubPagesManager {
         const list = document.createElement('ul');
         list.className = 'file-tree';
 
+        const createTreeItem = (item) => {
+            const li = document.createElement('li');
+            li.className = 'file-tree-item';
+            
+            const isFolder = item.type === 'dir';
+            const hasChildren = isFolder && item.children.length > 0;
+            
+            li.innerHTML = `
+                <div class="file-content ${this.currentFile?.path === item.path ? 'active' : ''}">
+                    <div class="flex items-center flex-1">
+                        ${hasChildren ? `
+                            <span class="folder-toggle mr-1">
+                                <i class="fas fa-angle-right transform transition-transform"></i>
+                            </span>
+                        ` : '<span class="w-4"></span>'}
+                        <i class="fas fa-${isFolder ? 'folder' : this.getFileIcon(item.name)} mr-2"></i>
+                        <span class="file-name">${item.name}</span>
+                    </div>
+                    <div class="file-actions flex items-center">
+                        ${this.getItemActions(item)}
+                    </div>
+                </div>
+                ${hasChildren ? '<ul class="file-tree-children hidden"></ul>' : ''}
+            `;
+
+            if (hasChildren) {
+                const children = li.querySelector('.file-tree-children');
+                item.children.forEach(child => {
+                    children.appendChild(createTreeItem(child));
+                });
+
+                // 文件夹展开/折叠
+                const toggle = li.querySelector('.folder-toggle');
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const icon = toggle.querySelector('i');
+                    const children = li.querySelector('.file-tree-children');
+                    icon.style.transform = children.classList.contains('hidden') ? 
+                        'rotate(90deg)' : 'none';
+                    children.classList.toggle('hidden');
+                });
+            }
+
+            return li;
+        };
+
         Object.values(sortedTree).forEach(item => {
-            const li = this.createTreeItem(item);
+            const li = createTreeItem(item);
             if (Object.keys(item.children || {}).length > 0) {
                 const childContainer = document.createElement('div');
                 childContainer.className = 'file-tree-children';
@@ -344,6 +446,54 @@ class GitHubPagesManager {
         }
     }
 
+    async handleFileEdit(content) {
+        if (!this.currentFile) return;
+        
+        this.fileChangeDetector.trackChange(
+            this.currentFile.path,
+            content,
+            this.currentFile.originalContent
+        );
+
+        this.updateFileStatus();
+        this.handleEditorChange(content);
+    }
+
+    updateFileStatus() {
+        const fileItems = document.querySelectorAll('.file-item');
+        fileItems.forEach(item => {
+            const path = item.dataset.path;
+            const statusEl = item.querySelector('.file-status');
+            
+            if (this.fileChangeDetector.changes.has(path)) {
+                if (!statusEl) {
+                    const status = document.createElement('div');
+                    status.className = 'file-status modified';
+                    item.querySelector('.flex').appendChild(status);
+                }
+            } else if (statusEl) {
+                statusEl.remove();
+            }
+        });
+    }
+
+    async saveAllChanges() {
+        const changedFiles = this.fileChangeDetector.getChangedFiles();
+        if (!changedFiles.length) return;
+
+        try {
+            for (const path of changedFiles) {
+                const change = this.fileChangeDetector.changes.get(path);
+                await this.saveFile(path, change.content);
+            }
+            this.fileChangeDetector.clearChanges();
+            this.updateFileStatus();
+            UIHelper.toast('所有更改已保存');
+        } catch (error) {
+            ErrorHandler.handle(error, 'saveAllChanges');
+        }
+    }
+
     async saveFile(path, content) {
         try {
             await this.api.updateFile(
@@ -548,6 +698,75 @@ class GitHubPagesManager {
             jpeg: 'text-pink-500',
         };
         return colorMap[ext] || 'text-gray-500';
+    }
+
+    setupShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        this.saveFile();
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        this.showNewFileModal();
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        document.getElementById('file-filter').focus();
+                        break;
+                }
+            } else if (e.key === 'Escape') {
+                // 关闭所有模态框
+                document.querySelectorAll('.modal').forEach(modal => 
+                    modal.classList.add('hidden')
+                );
+            }
+        });
+    }
+
+    getFileIcon(filename) {
+        const ext = filename.split('.').pop()?.toLowerCase();
+        const iconMap = {
+            md: 'file-alt',
+            html: 'html5',
+            css: 'css3',
+            js: 'js',
+            json: 'file-code',
+            yml: 'file-code',
+            png: 'file-image',
+            jpg: 'file-image',
+            jpeg: 'file-image',
+            gif: 'file-image',
+            pdf: 'file-pdf',
+            zip: 'file-archive'
+        };
+        return iconMap[ext] || 'file';
+    }
+
+    handleDragAndDrop() {
+        const dropZone = document.getElementById('file-list');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        dropZone.addEventListener('dragover', () => {
+            dropZone.classList.add('drag-active');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-active');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            dropZone.classList.remove('drag-active');
+            const files = Array.from(e.dataTransfer.files);
+        });
     }
 }
 

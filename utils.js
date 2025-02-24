@@ -304,6 +304,142 @@ export class FileHelper {
         
         return sorted;
     }
+
+    static buildTreeStructure(files, currentPath = '') {
+        const tree = [];
+        const paths = {};
+
+        // 首先创建所有文件节点
+        files.forEach(file => {
+            const fullPath = file.path;
+            const parts = fullPath.split('/');
+            let currentNode = null;
+            let currentPathStr = '';
+
+            parts.forEach((part, index) => {
+                currentPathStr = index === 0 ? part : `${currentPathStr}/${part}`;
+                if (!paths[currentPathStr]) {
+                    const isLast = index === parts.length - 1;
+                    const node = {
+                        id: currentPathStr,
+                        name: part,
+                        path: currentPathStr,
+                        type: isLast ? file.type : 'dir',
+                        children: [],
+                        content: isLast ? file.content : null,
+                        sha: isLast ? file.sha : null,
+                        size: isLast ? file.size : null
+                    };
+                    paths[currentPathStr] = node;
+
+                    if (index === 0) {
+                        tree.push(node);
+                    } else {
+                        const parentPath = parts.slice(0, index).join('/');
+                        const parent = paths[parentPath];
+                        if (parent) {
+                            parent.children.push(node);
+                        }
+                    }
+                }
+                currentNode = paths[currentPathStr];
+            });
+        });
+
+        // 排序：文件夹在前，文件在后，同类型按字母排序
+        const sortNodes = (nodes) => {
+            return nodes.sort((a, b) => {
+                if (a.type === b.type) {
+                    return a.name.localeCompare(b.name);
+                }
+                return a.type === 'dir' ? -1 : 1;
+            });
+        };
+
+        // 递归排序所有节点
+        const sortTree = (node) => {
+            if (node.children && node.children.length > 0) {
+                node.children = sortNodes(node.children);
+                node.children.forEach(sortTree);
+            }
+            return node;
+        };
+
+        return sortNodes(tree).map(sortTree);
+    }
+
+    static getDefaultContent(fileType) {
+        const templates = {
+            md: '# New Markdown File\n\n',
+            html: '<!DOCTYPE html>\n<html>\n<head>\n    <title>New Page</title>\n</head>\n<body>\n\n</body>\n</html>',
+            css: '/* Styles */\n',
+            js: '// JavaScript\n',
+            json: '{\n    \n}',
+            yml: '# YAML Config\n',
+            txt: ''
+        };
+        return templates[fileType] || '';
+    }
+
+    static validateFileName(name) {
+        const invalidChars = /[<>:"\/\\|?*\x00-\x1F]/g;
+        return {
+            isValid: !invalidChars.test(name) && name.trim().length > 0,
+            sanitized: name.replace(invalidChars, '')
+        };
+    }
+}
+
+export class CacheManager {
+    static CACHE_PREFIX = 'ghp_';
+    static CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
+
+    static setCache(key, data) {
+        const cacheData = {
+            timestamp: Date.now(),
+            data: data
+        };
+        localStorage.setItem(this.CACHE_PREFIX + key, JSON.stringify(cacheData));
+    }
+
+    static getCache(key) {
+        const cached = localStorage.getItem(this.CACHE_PREFIX + key);
+        if (!cached) return null;
+
+        const { timestamp, data } = JSON.parse(cached);
+        if (Date.now() - timestamp > this.CACHE_EXPIRY) {
+            this.removeCache(key);
+            return null;
+        }
+
+        return data;
+    }
+
+    static removeCache(key) {
+        localStorage.removeItem(this.CACHE_PREFIX + key);
+    }
+
+    static clearCache() {
+        Object.keys(localStorage)
+            .filter(key => key.startsWith(this.CACHE_PREFIX))
+            .forEach(key => localStorage.removeItem(key));
+    }
+
+    static async fetchWithCache(key, fetcher, ttl = 300000) {
+        const cached = this.getCache(key);
+        if (cached) return cached;
+
+        const data = await fetcher();
+        this.setCache(key, data, ttl);
+        return data;
+    }
+
+    static invalidatePattern(pattern) {
+        const regex = new RegExp(pattern);
+        Object.keys(localStorage)
+            .filter(key => regex.test(key))
+            .forEach(key => this.removeCache(key));
+    }
 }
 
 export class ExternalEditorManager {
@@ -415,5 +551,83 @@ export class EditorManager {
         const model = this.editor.getModel();
         const language = languageMap[ext] || 'plaintext';
         monaco.editor.setModelLanguage(model, language);
+    }
+}
+
+export class FileChangeDetector {
+    constructor() {
+        this.changes = new Map();
+    }
+
+    trackChange(path, content, originalContent) {
+        if (content !== originalContent) {
+            this.changes.set(path, {
+                content,
+                originalContent,
+                timestamp: Date.now()
+            });
+        } else {
+            this.changes.delete(path);
+        }
+    }
+
+    hasUnsavedChanges() {
+        return this.changes.size > 0;
+    }
+
+    getChangedFiles() {
+        return Array.from(this.changes.keys());
+    }
+
+    clearChanges(path) {
+        if (path) {
+            this.changes.delete(path);
+        } else {
+            this.changes.clear();
+        }
+    }
+}
+
+export class ErrorHandler {
+    static handle(error, context = '') {
+        console.error(`Error in ${context}:`, error);
+
+        if (error.response?.status === 401) {
+            UIHelper.toast('认证失败，请重新登录');
+            localStorage.removeItem(CONFIG.STORAGE_KEYS.TOKEN);
+            location.reload();
+            return;
+        }
+
+        const message = this.getErrorMessage(error);
+        UIHelper.toast(message);
+    }
+
+    static getErrorMessage(error) {
+        if (error.response?.data?.message) {
+            return error.response.data.message;
+        }
+        if (error.message) {
+            return error.message;
+        }
+        return '操作失败，请重试';
+    }
+}
+
+export class PathHelper {
+    static join(...parts) {
+        return parts.filter(Boolean).join('/').replace(/\/+/g, '/');
+    }
+
+    static getParentPath(path) {
+        return path.split('/').slice(0, -1).join('/');
+    }
+
+    static getFileName(path) {
+        return path.split('/').pop();
+    }
+
+    static isSubPath(parentPath, childPath) {
+        return childPath.startsWith(parentPath + '/');
     }
 }
