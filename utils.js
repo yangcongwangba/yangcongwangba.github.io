@@ -59,14 +59,25 @@ export class GithubAPI {
         });
     }
 
-    // 创建文件夹
+    // 优化创建文件夹方法
     async createFolder(repo, path) {
-        return this.fetchAPI(`/repos/${repo}/contents/${path}`, {
+        const gitkeepPath = path.endsWith('/') ? `${path}.gitkeep` : `${path}/.gitkeep`;
+        return this.fetchAPI(`/repos/${repo}/contents/${gitkeepPath}`, {
             method: 'PUT',
             body: JSON.stringify({
                 message: `Create folder ${path}`,
-                content: btoa(''), // 创建空文件
-                path: `${path}/.gitkeep`
+                content: btoa('')
+            })
+        });
+    }
+
+    // 创建文件方法
+    async createFile(repo, path, content = '', message = '') {
+        return this.fetchAPI(`/repos/${repo}/contents/${path}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                message: message || `Create ${path}`,
+                content: btoa(unescape(encodeURIComponent(content)))
             })
         });
     }
@@ -98,14 +109,12 @@ export class GithubAPI {
     // 优化文件内容读取方法
     async getFileContent(content, encoding = 'utf-8') {
         try {
-            // 修复 base64 解码问题
+            if (!content) return '';
             const decoded = atob(content.replace(/\s/g, ''));
-            return new TextDecoder(encoding).decode(
-                new Uint8Array([...decoded].map(c => c.charCodeAt(0)))
-            );
+            return decodeURIComponent(escape(decoded));
         } catch (error) {
             console.error('Content decode error:', error);
-            return content;
+            return '';
         }
     }
 }
@@ -178,87 +187,20 @@ export class UIHelper {
 
 export class FileHelper {
     static getFileType(filename) {
-        if (!filename) return { type: 'unknown', icon: 'fa-file', preview: false, color: 'text-gray-400' };
+        if (!filename) return { type: 'unknown', icon: 'file' };
         
+        const isFolder = !filename.includes('.');
+        if (isFolder) return { type: 'folder', icon: 'folder' };
+
         const ext = filename.split('.').pop()?.toLowerCase();
-        const typeMap = {
-            // 开发相关文件
-            'html': { type: 'html', icon: 'fa-html5', preview: true, color: 'text-orange-500' },
-            'css': { type: 'css', icon: 'fa-css3-alt', preview: false, color: 'text-blue-500' },
-            'js': { type: 'javascript', icon: 'fa-js', preview: false, color: 'text-yellow-500' },
-            'jsx': { type: 'react', icon: 'fa-react', preview: false, color: 'text-blue-400' },
-            'ts': { type: 'typescript', icon: 'fa-code', preview: false, color: 'text-blue-600' },
-            'tsx': { type: 'react-ts', icon: 'fa-react', preview: false, color: 'text-blue-600' },
-            'vue': { type: 'vue', icon: 'fa-vuejs', preview: false, color: 'text-green-500' },
-            'php': { type: 'php', icon: 'fa-php', preview: false, color: 'text-purple-500' },
-            'py': { type: 'python', icon: 'fa-python', preview: false, color: 'text-yellow-600' },
-            'java': { type: 'java', icon: 'fa-java', preview: false, color: 'text-red-500' },
-            
-            // 配置文件
-            'json': { type: 'json', icon: 'fa-brackets-curly', preview: false, color: 'text-yellow-400' },
-            'yml': { type: 'yaml', icon: 'fa-file-lines', preview: false, color: 'text-gray-600' },
-            'yaml': { type: 'yaml', icon: 'fa-file-lines', preview: false, color: 'text-gray-600' },
-            'xml': { type: 'xml', icon: 'fa-code', preview: false, color: 'text-orange-400' },
-            'conf': { type: 'config', icon: 'fa-cog', preview: false, color: 'text-gray-500' },
-            'env': { type: 'env', icon: 'fa-key', preview: false, color: 'text-green-600' },
-            
-            // 文档类型
-            'md': { type: 'markdown', icon: 'fa-markdown', preview: true, color: 'text-blue-500' },
-            'txt': { type: 'text', icon: 'fa-file-lines', preview: true, color: 'text-gray-500' },
-            'pdf': { type: 'pdf', icon: 'fa-file-pdf', preview: false, color: 'text-red-500' },
-            'doc': { type: 'word', icon: 'fa-file-word', preview: false, color: 'text-blue-700' },
-            'docx': { type: 'word', icon: 'fa-file-word', preview: false, color: 'text-blue-700' },
-            'xls': { type: 'excel', icon: 'fa-file-excel', preview: false, color: 'text-green-700' },
-            'xlsx': { type: 'excel', icon: 'fa-file-excel', preview: false, color: 'text-green-700' },
-            'ppt': { type: 'powerpoint', icon: 'fa-file-powerpoint', preview: false, color: 'text-red-700' },
-            'pptx': { type: 'powerpoint', icon: 'fa-file-powerpoint', preview: false, color: 'text-red-700' },
-            
-            // 图片类型
-            'jpg': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
-            'jpeg': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
-            'png': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
-            'gif': { type: 'image', icon: 'fa-image', preview: true, color: 'text-pink-500' },
-            'svg': { type: 'svg', icon: 'fa-bezier-curve', preview: true, color: 'text-orange-500' },
-            'ico': { type: 'icon', icon: 'fa-image', preview: true, color: 'text-blue-300' },
-            
-            // 字体文件
-            'ttf': { type: 'font', icon: 'fa-font', preview: false, color: 'text-purple-600' },
-            'woff': { type: 'font', icon: 'fa-font', preview: false, color: 'text-purple-600' },
-            'woff2': { type: 'font', icon: 'fa-font', preview: false, color: 'text-purple-600' },
-            'eot': { type: 'font', icon: 'fa-font', preview: false, color: 'text-purple-600' },
-            
-            // 媒体文件
-            'mp3': { type: 'audio', icon: 'fa-file-audio', preview: false, color: 'text-green-500' },
-            'wav': { type: 'audio', icon: 'fa-file-audio', preview: false, color: 'text-green-500' },
-            'mp4': { type: 'video', icon: 'fa-file-video', preview: false, color: 'text-blue-500' },
-            'avi': { type: 'video', icon: 'fa-file-video', preview: false, color: 'text-blue-500' },
-            'mov': { type: 'video', icon: 'fa-file-video', preview: false, color: 'text-blue-500' },
-            
-            // 压缩文件
-            'zip': { type: 'archive', icon: 'fa-file-zipper', preview: false, color: 'text-yellow-700' },
-            'rar': { type: 'archive', icon: 'fa-file-zipper', preview: false, color: 'text-yellow-700' },
-            '7z': { type: 'archive', icon: 'fa-file-zipper', preview: false, color: 'text-yellow-700' },
-            'tar': { type: 'archive', icon: 'fa-file-zipper', preview: false, color: 'text-yellow-700' },
-            'gz': { type: 'archive', icon: 'fa-file-zipper', preview: false, color: 'text-yellow-700' },
-            
-            // Git相关
-            'gitignore': { type: 'git', icon: 'fa-git-alt', preview: false, color: 'text-orange-600' },
-            'gitattributes': { type: 'git', icon: 'fa-git-alt', preview: false, color: 'text-orange-600' }
+        const isMarkdown = ext === 'md';
+        const isImage = ['jpg', 'jpeg', 'png', 'gif', 'svg'].includes(ext);
+
+        return {
+            type: ext || 'unknown',
+            icon: isFolder ? 'folder' : 'file',
+            preview: isMarkdown || isImage
         };
-        
-        // 对于没有后缀的文件，尝试通过文件名匹配
-        if (!ext || !typeMap[ext]) {
-            const nameMatch = {
-                'dockerfile': { type: 'docker', icon: 'fa-docker', preview: false, color: 'text-blue-500' },
-                'license': { type: 'license', icon: 'fa-gavel', preview: true, color: 'text-gray-600' },
-                'readme': { type: 'markdown', icon: 'fa-book', preview: true, color: 'text-blue-500' }
-            };
-            
-            const lowerName = filename.toLowerCase();
-            return nameMatch[lowerName] || { type: 'unknown', icon: 'fa-file', preview: false, color: 'text-gray-400' };
-        }
-        
-        return typeMap[ext] || { type: 'unknown', icon: 'fa-file', preview: false, color: 'text-gray-400' };
     }
 
     static isFolder(path) {
@@ -308,21 +250,28 @@ export class FileHelper {
         }
     }
 
-    static buildFileTree(files) {
-        const root = { children: {} };
+    static buildFileTree(files, currentPath = '') {
+        const root = { name: '', path: currentPath, type: 'dir', children: {} };
         
         files.forEach(file => {
-            const parts = file.path.split('/');
+            if (!file.path.startsWith(currentPath)) return;
+            
+            const relativePath = file.path.slice(currentPath.length);
+            const parts = relativePath.split('/').filter(Boolean);
             let current = root;
             
             parts.forEach((part, index) => {
+                const isLast = index === parts.length - 1;
+                const path = currentPath + parts.slice(0, index + 1).join('/');
+                
                 if (!current.children[part]) {
                     current.children[part] = {
                         name: part,
-                        path: parts.slice(0, index + 1).join('/'),
-                        type: index === parts.length - 1 ? file.type : 'dir',
+                        path: path,
+                        type: isLast ? file.type : 'dir',
                         size: file.size,
                         sha: file.sha,
+                        content: file.content,
                         children: {}
                     };
                 }
@@ -331,6 +280,29 @@ export class FileHelper {
         });
         
         return root;
+    }
+
+    static sortTree(tree) {
+        const sorted = {};
+        
+        // 先添加文件夹
+        Object.keys(tree).filter(key => tree[key].type === 'dir')
+            .sort()
+            .forEach(key => {
+                sorted[key] = {
+                    ...tree[key],
+                    children: this.sortTree(tree[key].children)
+                };
+            });
+        
+        // 再添加文件
+        Object.keys(tree).filter(key => tree[key].type !== 'dir')
+            .sort()
+            .forEach(key => {
+                sorted[key] = tree[key];
+            });
+        
+        return sorted;
     }
 }
 
@@ -422,5 +394,26 @@ export class EditorManager {
 
     getValue() {
         return this.editor?.getValue() || '';
+    }
+
+    setLanguage(filename) {
+        if (!this.editor) return;
+        
+        const ext = filename.split('.').pop()?.toLowerCase();
+        const languageMap = {
+            'md': 'markdown',
+            'js': 'javascript',
+            'ts': 'typescript',
+            'html': 'html',
+            'css': 'css',
+            'json': 'json',
+            'yml': 'yaml',
+            'yaml': 'yaml',
+            'xml': 'xml'
+        };
+
+        const model = this.editor.getModel();
+        const language = languageMap[ext] || 'plaintext';
+        monaco.editor.setModelLanguage(model, language);
     }
 }

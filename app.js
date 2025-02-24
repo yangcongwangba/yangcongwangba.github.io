@@ -115,107 +115,165 @@ class GitHubPagesManager {
     async loadFiles() {
         try {
             const files = await this.api.getContents(this.currentRepo, this.currentPath);
-            const fileTree = FileHelper.buildFileTree(files);
-            this.renderFileTree(fileTree);
+            const tree = FileHelper.buildFileTree(files, this.currentPath);
+            this.renderTree(tree);
             this.updateBreadcrumb();
         } catch (error) {
             UIHelper.toast('加载文件失败: ' + error.message);
         }
     }
 
-    renderFileTree(tree, parentElement = document.getElementById('file-list')) {
+    renderTree(tree, parentElement = document.getElementById('file-list')) {
         parentElement.innerHTML = '';
-        const ul = document.createElement('ul');
-        ul.className = 'file-tree';
+        const sortedTree = FileHelper.sortTree(tree.children);
         
-        Object.values(tree.children)
-            .sort((a, b) => {
-                if (a.type === b.type) return a.name.localeCompare(b.name);
-                return a.type === 'dir' ? -1 : 1;
-            })
-            .forEach(item => {
-                const li = this.createTreeItem(item);
-                ul.appendChild(li);
-            });
-        
-        parentElement.appendChild(ul);
+        const list = document.createElement('ul');
+        list.className = 'file-tree';
+
+        Object.values(sortedTree).forEach(item => {
+            const li = this.createTreeItem(item);
+            if (Object.keys(item.children || {}).length > 0) {
+                const childContainer = document.createElement('div');
+                childContainer.className = 'file-tree-children';
+                this.renderTree(item, childContainer);
+                li.appendChild(childContainer);
+            }
+            list.appendChild(li);
+        });
+
+        parentElement.appendChild(list);
     }
 
     createTreeItem(item) {
         const li = document.createElement('li');
         li.className = 'file-tree-item';
-        if (Object.keys(item.children).length > 0) li.classList.add('has-children');
 
         const itemDiv = document.createElement('div');
         itemDiv.className = `file-item ${this.currentFile?.path === item.path ? 'active' : ''}`;
         itemDiv.dataset.path = item.path;
         itemDiv.dataset.type = item.type;
 
-        const fileType = item.type === 'dir' ? 
-            { icon: 'fa-folder', color: 'text-yellow-500' } : 
-            FileHelper.getFileType(item.name);
+        const isFolder = item.type === 'dir';
+        const icon = isFolder ? 'folder' : 'file';
 
         itemDiv.innerHTML = `
             <div class="flex justify-between items-center">
                 <div class="flex items-center">
-                    <i class="fas ${fileType.icon} mr-2 ${fileType.color}"></i>
+                    <i class="fas fa-${icon} mr-2 ${isFolder ? 'text-yellow-500' : 'text-gray-500'}"></i>
                     <span class="truncate">${item.name}</span>
                 </div>
-                <div class="file-actions flex items-center space-x-2">
-                    ${item.type !== 'dir' ? `
-                        <button class="external-editor-button edit-external" data-path="${item.path}">
-                            <i class="fas fa-external-link-alt"></i>
-                        </button>
-                    ` : ''}
+                <div class="file-actions">
+                    ${this.getItemActions(item)}
                 </div>
             </div>
         `;
 
-        itemDiv.addEventListener('click', (e) => {
-            if (e.target.closest('.file-actions')) return;
-            this.loadFileContent(item.path);
-        });
-
+        this.attachItemEvents(itemDiv, item);
         li.appendChild(itemDiv);
-
-        // 添加子项目
-        if (Object.keys(item.children).length > 0) {
-            const childrenContainer = document.createElement('div');
-            childrenContainer.className = 'file-tree-children';
-            this.renderFileTree({ children: item.children }, childrenContainer);
-            li.appendChild(childrenContainer);
-        }
-
-        // 添加外部编辑器支持
-        const editButton = itemDiv.querySelector('.edit-external');
-        if (editButton) {
-            editButton.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                await this.openInExternalEditor(item);
-            });
-        }
-
         return li;
     }
 
-    async openInExternalEditor(file) {
-        try {
-            const content = await this.api.getFileContent(file.content);
-            const opened = await FileHelper.openInExternalEditor(content, file.name);
+    getItemActions(item) {
+        const isFolder = item.type === 'dir';
+        return `
+            ${isFolder ? `
+                <button class="action-btn create-file" title="新建文件">
+                    <i class="fas fa-plus"></i>
+                </button>
+            ` : `
+                <button class="action-btn edit" title="编辑">
+                    <i class="fas fa-edit"></i>
+                </button>
+            `}
+            <button class="action-btn delete" title="删除">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+    }
+
+    attachItemEvents(element, item) {
+        element.addEventListener('click', (e) => {
+            if (e.target.closest('.file-actions')) return;
             
-            if (opened) {
-                const cleanup = await ExternalEditorManager.watchFile(
-                    file.name,
-                    content,
-                    async (newContent) => {
-                        await this.saveFile(file.path, newContent);
-                        cleanup();
-                    }
+            if (item.type === 'dir') {
+                this.currentPath = item.path;
+                this.loadFiles();
+            } else {
+                this.loadFileContent(item.path);
+            }
+        });
+
+        // 文件夹创建按钮
+        element.querySelector('.create-file')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.showNewFileModal(item.path);
+        });
+
+        // 编辑按钮
+        element.querySelector('.edit')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.loadFileContent(item.path);
+        });
+
+        // 删除按钮
+        element.querySelector('.delete')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.confirmDelete(item);
+        });
+    }
+
+    async confirmDelete(item) {
+        const isFolder = item.type === 'dir';
+        const confirmed = await UIHelper.confirm({
+            title: `删除${isFolder ? '文件夹' : '文件'}`,
+            message: `确定要删除 ${item.path} ${isFolder ? '及其所有内容' : ''} 吗？此操作不可恢复。`,
+            type: 'danger'
+        });
+
+        if (confirmed) {
+            await this.deleteItem(item);
+        }
+    }
+
+    async deleteItem(item) {
+        try {
+            if (item.type === 'dir') {
+                // 递归删除文件夹内容
+                const files = await this.api.getContents(this.currentRepo, item.path);
+                for (const file of files) {
+                    await this.api.deleteFile(
+                        this.currentRepo,
+                        file.path,
+                        file.sha,
+                        `Delete ${file.path}`
+                    );
+                }
+            } else {
+                await this.api.deleteFile(
+                    this.currentRepo,
+                    item.path,
+                    item.sha,
+                    `Delete ${item.path}`
                 );
             }
+            
+            if (this.currentFile?.path === item.path) {
+                this.currentFile = null;
+                this.clearEditor();
+            }
+            
+            await this.loadFiles();
+            UIHelper.toast('删除成功');
         } catch (error) {
-            UIHelper.toast('打开外部编辑器失败: ' + error.message);
+            UIHelper.toast('删除失败: ' + error.message);
         }
+    }
+
+    clearEditor() {
+        this.editor.setContent('');
+        document.getElementById('current-file-name').textContent = '编辑器';
+        document.getElementById('file-type-badge').textContent = '';
+        document.getElementById('preview-container').classList.add('hidden');
     }
 
     async loadFileContent(path) {
