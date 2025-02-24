@@ -1,38 +1,56 @@
 export class GithubAPI {
     constructor(token) {
         this.token = token;
-        this.baseURL = 'https://api.github.com';
+        this.baseURL = CONFIG.GITHUB_URL;
+    }
+
+    // 添加验证方法
+    async testAuth() {
+        try {
+            LoadingManager.show('验证 Token...');
+            const response = await fetch(`${this.baseURL}/user`, {
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Authorization': `token ${this.token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Token 无效或缺少权限');
+            }
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Auth test failed:', error);
+            throw new Error(error.message || 'Token 验证失败');
+        } finally {
+            LoadingManager.hide();
+        }
     }
 
     async fetchAPI(path, options = {}) {
         const headers = {
             'Accept': 'application/vnd.github.v3+json',
-            'Authorization': `Bearer ${this.token}`,
+            'Authorization': `token ${this.token}`,
             'Content-Type': 'application/json',
         };
 
         try {
-            LoadingManager.show();
-            const response = await fetch(this.baseURL + path, {
+            const response = await fetch(`${this.baseURL}${path}`, {
                 ...options,
-                headers
+                headers: { ...headers, ...options.headers }
             });
-            
-            const data = await response.json();
-            
+
             if (!response.ok) {
-                throw Object.assign(new Error(data.message || '请求失败'), {
-                    status: response.status,
-                    data
-                });
+                const data = await response.json();
+                throw new Error(data.message || '请求失败');
             }
-            
-            return data;
+
+            return await response.json();
         } catch (error) {
             console.error(`API Error (${path}):`, error);
             throw error;
-        } finally {
-            LoadingManager.hide();
         }
     }
 

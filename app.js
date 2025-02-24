@@ -25,35 +25,47 @@ class GitHubPagesManager {
         document.getElementById('logout-btn')?.addEventListener('click', () => this.handleLogout());
     }
 
-    async handleLogin() {
+    async handleLogin(e) {
+        e.preventDefault();
         const loginBtn = document.getElementById('login-btn');
         const loginError = document.getElementById('login-error');
         const spinner = loginBtn.querySelector('.fa-spinner');
         const token = document.getElementById('token-input').value.trim();
 
-        if (!token) {
-            this.showLoginError('请输入 Token');
-            return;
-        }
-
         try {
+            if (!token) {
+                throw new Error('请输入 Token');
+            }
+
+            // 禁用按钮状态
             loginBtn.disabled = true;
             spinner.classList.remove('hidden');
             loginError.classList.add('hidden');
 
+            // 验证 token
             const api = new GithubAPI(token);
-            const user = await api.fetchAPI('/user');
+            const user = await api.testAuth();
 
-            AuthManager.setToken(token);
-            AuthManager.setUser(user);
+            if (!user || !user.login) {
+                throw new Error('Token 验证失败');
+            }
 
+            // 保存认证信息
+            localStorage.setItem(CONFIG.STORAGE_KEYS.TOKEN, token);
+            localStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(user));
+
+            // 初始化应用
             await this.initWithAuth(token);
             
+            // 提示登录成功
             UIHelper.toast(`欢迎回来, ${user.login}!`, 'success');
+
         } catch (error) {
             console.error('Login failed:', error);
-            this.showLoginError(error.message || '登录失败，请检查 Token 是否正确');
+            loginError.textContent = error.message || '登录失败';
+            loginError.classList.remove('hidden');
         } finally {
+            // 恢复按钮状态
             loginBtn.disabled = false;
             spinner.classList.add('hidden');
         }

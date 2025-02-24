@@ -1,14 +1,10 @@
 export const CONFIG = {
     STORAGE_KEYS: {
         TOKEN: 'github_token',
-        REPO: 'github_repo'
+        USER: 'github_user'
     },
-    API: {
-        BASE: 'https://api.github.com',
-        ENDPOINTS: {
-            USER: '/user',
-            CONTENTS: '/repos/{repo}/contents'
-        }
-    },
-    DEFAULT_REPO: 'yangcongwangba/yangcongwangba.github.io'
+    DEFAULT_REPO: 'yangcongwangba/yangcongwangba.github.io',
+    GITHUB_URL: 'https://api.github.com',
+    TOKEN_SCOPE: ['repo'], // 所需的 token 权限
+    VERSION: '1.0.0'
 };
