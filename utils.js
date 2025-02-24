@@ -70,6 +70,44 @@ export class GithubAPI {
             })
         });
     }
+
+    // 添加上传文件方法
+    async uploadFile(repo, path, file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const content = e.target.result.split(',')[1]; // 获取 base64 内容
+                    const response = await this.fetchAPI(`/repos/${repo}/contents/${path}`, {
+                        method: 'PUT',
+                        body: JSON.stringify({
+                            message: `Upload ${file.name}`,
+                            content: content
+                        })
+                    });
+                    resolve(response);
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            reader.onerror = () => reject(new Error('文件读取失败'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // 优化文件内容读取方法
+    async getFileContent(content, encoding = 'utf-8') {
+        try {
+            const decoded = atob(content);
+            if (encoding === 'utf-8') {
+                return decodeURIComponent(escape(decoded));
+            }
+            return decoded;
+        } catch (error) {
+            console.error('Content decode error:', error);
+            return content;
+        }
+    }
 }
 
 export class UIHelper {
@@ -205,7 +243,11 @@ export class EditorManager {
     }
 
     setContent(content, language) {
-        if (!this.editor) return;
+        if (!this.editor) {
+            setTimeout(() => this.setContent(content, language), 100);
+            return;
+        }
+        
         const model = this.editor.getModel();
         monaco.editor.setModelLanguage(model, language);
         this.editor.setValue(content);

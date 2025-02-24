@@ -46,15 +46,20 @@
                 <div class="bg-white p-4 rounded-lg shadow">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl font-semibold">文件列表</h2>
-                        <div class="space-x-2">
+                        <div class="flex items-center space-x-2">
                             <input type="text" id="file-filter" 
                                 class="px-2 py-1 border rounded text-sm" 
                                 placeholder="搜索文件...">
-                            <button id="new-file-btn" class="text-gray-600 hover:text-gray-800 tooltip" data-tip="创建文件/文件夹">
+                            <label for="file-upload" class="cursor-pointer text-gray-600 hover:text-gray-800">
+                                <i class="fas fa-upload"></i>
+                                <input type="file" id="file-upload" class="hidden" multiple>
+                            </label>
+                            <button id="new-file-btn" class="text-gray-600 hover:text-gray-800">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
                     </div>
+                    <div class="mb-2 text-sm text-gray-500" id="upload-status"></div>
                     <div id="file-list" class="space-y-1 max-h-[600px] overflow-y-auto"></div>
                 </div>
 
@@ -103,6 +108,19 @@
             <div class="flex justify-end space-x-4">
                 <button id="cancel-create" class="px-4 py-2 text-gray-600 hover:text-gray-800">取消</button>
                 <button id="confirm-create" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 上传进度对话框 -->
+    <div id="upload-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg max-w-md w-full">
+            <h3 class="text-xl font-bold mb-4">文件上传中</h3>
+            <div class="mb-4">
+                <div class="text-sm text-gray-600 mb-2" id="upload-file-name"></div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="upload-progress" class="bg-blue-600 h-2 rounded-full transition-all duration-300"></div>
+                </div>
             </div>
         </div>
     </div>

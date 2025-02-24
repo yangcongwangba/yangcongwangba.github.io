@@ -11,6 +11,7 @@ class GitHubPagesManager {
             document.getElementById('editor-container'),
             content => this.handleEditorChange(content)
         );
+        this.bindFileUpload();
     }
 
     init() {
@@ -51,6 +52,37 @@ class GitHubPagesManager {
             if (e.target.classList.contains('file-item')) {
                 this.loadFileContent(e.target.dataset.path);
             }
+        });
+    }
+
+    bindFileUpload() {
+        const fileUpload = document.getElementById('file-upload');
+        const uploadStatus = document.getElementById('upload-status');
+        
+        fileUpload.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+
+            uploadStatus.textContent = `准备上传 ${files.length} 个文件...`;
+            
+            try {
+                for (const file of files) {
+                    const path = this.currentPath ? 
+                        `${this.currentPath}/${file.name}` : file.name;
+                    
+                    await this.api.uploadFile(this.currentRepo, path, file);
+                    uploadStatus.textContent = `上传成功: ${file.name}`;
+                }
+                
+                this.loadFiles();
+                setTimeout(() => {
+                    uploadStatus.textContent = '';
+                }, 3000);
+            } catch (error) {
+                uploadStatus.textContent = `上传失败: ${error.message}`;
+            }
+            
+            fileUpload.value = ''; // 重置文件输入
         });
     }
 
@@ -116,8 +148,13 @@ class GitHubPagesManager {
         try {
             const file = await this.api.getFile(this.currentRepo, path);
             this.currentFile = file;
-            const content = decodeURIComponent(escape(atob(file.content)));
+            
+            // 优化文件内容加载
+            const content = await this.api.getFileContent(file.content);
             const fileType = FileHelper.getFileType(file.name);
+            
+            // 等待编辑器初始化完成
+            await this.ensureEditor();
             
             this.editor.setContent(content, fileType.type);
             document.getElementById('current-file-name').textContent = file.name;
@@ -125,6 +162,21 @@ class GitHubPagesManager {
             this.handleEditorChange(content);
         } catch (error) {
             UIHelper.toast('加载文件内容失败: ' + error.message);
+        }
+    }
+
+    async ensureEditor() {
+        if (!this.editor) {
+            return new Promise(resolve => {
+                const checkEditor = () => {
+                    if (this.editor) {
+                        resolve();
+                    } else {
+                        setTimeout(checkEditor, 100);
+                    }
+                };
+                checkEditor();
+            });
         }
     }
 
@@ -279,23 +331,42 @@ class GitHubPagesManager {
         const fileList = document.getElementById('file-list');
         const sortedFiles = FileHelper.sortFiles(files);
         
-        fileList.innerHTML = sortedFiles.map(file => {
+        const fileItems = sortedFiles.map(file => {
             const isFolder = file.type === 'dir';
             const fileType = isFolder ? { icon: 'fa-folder' } : FileHelper.getFileType(file.name);
             
             return `
-                <div class="file-item hover:bg-gray-100 p-2 rounded cursor-pointer flex justify-between items-center" 
+                <div class="file-item hover:bg-gray-100 p-2 rounded cursor-pointer flex justify-between items-center ${this.currentFile?.path === file.path ? 'bg-blue-50' : ''}" 
                      data-path="${file.path}" data-type="${file.type}">
                     <div class="flex items-center">
-                        <i class="fas ${fileType.icon} mr-2 ${isFolder ? 'text-yellow-500' : ''}"></i>
+                        <i class="fas ${fileType.icon} mr-2 ${isFolder ? 'text-yellow-500' : ''} ${this.getFileIconColor(file.name)}"></i>
                         <span class="truncate">${file.name}</span>
                     </div>
-                    <span class="text-gray-500 text-sm">
-                        ${!isFolder ? UIHelper.formatSize(file.size) : ''}
-                    </span>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-gray-500 text-sm">
+                            ${!isFolder ? UIHelper.formatSize(file.size) : ''}
+                        </span>
+                    </div>
                 </div>
             `;
         }).join('');
+            
+        fileList.innerHTML = fileItems;
+    }
+
+    getFileIconColor(filename) {
+        const ext = filename.split('.').pop().toLowerCase();
+        const colorMap = {
+            md: 'text-green-500',
+            html: 'text-orange-500',
+            css: 'text-blue-500',
+            js: 'text-yellow-500',
+            json: 'text-purple-500',
+            png: 'text-pink-500',
+            jpg: 'text-pink-500',
+            jpeg: 'text-pink-500',
+        };
+        return colorMap[ext] || 'text-gray-500';
     }
 }
 
