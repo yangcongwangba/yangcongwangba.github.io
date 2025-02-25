@@ -21,32 +21,44 @@
                     <li class="nav-item"><a class="nav-link" href="#" data-view="dashboard">仪表盘</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" data-view="posts">文章管理</a></li>
                     <li class="nav-item"><a class="nav-link" href="#" data-view="new-post">新建文章</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" data-view="settings">设置</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" data-view="settings">网站设置</a></li>
                 </ul>
             </div>
             
             <!-- 主内容区 -->
-            <div class="col-md-10 main-content">
-                <div id="login-container" class="text-center p-5">
-                    <h2>GitHub Pages 管理后台</h2>
-                    <p>请使用GitHub账号登录以管理您的网站</p>
-                    <button id="login-button" class="btn btn-primary">GitHub登录</button>
+            <div class="col-md-10">
+                <!-- 登录容器 -->
+                <div id="login-container" class="d-flex align-items-center justify-content-center" style="height: 100vh;">
+                    <!-- 登录表单内容会由JS动态生成 -->
                 </div>
                 
-                <div id="content-container" class="d-none">
+                <!-- 内容容器（登录后显示） -->
+                <div id="content-container" class="main-content d-none">
                     <!-- 仪表盘视图 -->
                     <div id="dashboard-view" class="content-view">
-                        <h2>仪表盘</h2>
+                        <h2 class="mb-4">仪表盘</h2>
                         <div class="row stats">
-                            <!-- 统计信息将通过JS动态加载 -->
+                            <!-- 统计信息会在JS中动态加载 -->
+                        </div>
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">最近活动</h5>
+                                    </div>
+                                    <div class="card-body" id="recent-activity">
+                                        <p class="text-center">加载中...</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
                     <!-- 文章列表视图 -->
-                    <div id="posts-view" class="content-view d-none">
-                        <h2>文章管理</h2>
+                    <div id="posts-view" class="content-view">
+                        <h2 class="mb-4">文章管理</h2>
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th>标题</th>
@@ -55,48 +67,58 @@
                                     </tr>
                                 </thead>
                                 <tbody id="posts-list">
-                                    <!-- 文章列表将通过JS动态加载 -->
+                                    <tr>
+                                        <td colspan="3" class="text-center">加载中...</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                     
-                    <!-- 新建/编辑文章视图 -->
-                    <div id="new-post-view" class="content-view d-none">
-                        <h2 id="editor-title">新建文章</h2>
-                        <div class="form-group mb-3">
-                            <input type="text" id="post-title" class="form-control" placeholder="文章标题">
+                    <!-- 编辑文章视图 -->
+                    <div id="new-post-view" class="content-view">
+                        <h2 id="editor-title" class="mb-4">新建文章</h2>
+                        <div class="mb-3">
+                            <label for="post-title" class="form-label">标题</label>
+                            <input type="text" id="post-title" class="form-control">
                         </div>
-                        <div class="row mb-3">
-                            <div class="col">
-                                <input type="text" id="post-categories" class="form-control" placeholder="分类(用逗号分隔)">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="post-categories" class="form-label">分类</label>
+                                <input type="text" id="post-categories" class="form-control" placeholder="用逗号分隔">
                             </div>
-                            <div class="col">
-                                <input type="text" id="post-tags" class="form-control" placeholder="标签(用逗号分隔)">
+                            <div class="col-md-6 mb-3">
+                                <label for="post-tags" class="form-label">标签</label>
+                                <input type="text" id="post-tags" class="form-control" placeholder="用逗号分隔">
                             </div>
                         </div>
-                        <div class="form-group mb-3">
+                        <div class="mb-3">
+                            <label for="editor" class="form-label">内容</label>
                             <textarea id="editor"></textarea>
                         </div>
-                        <div class="form-group">
-                            <button id="save-post" class="btn btn-primary">发布文章</button>
-                            <button id="save-draft" class="btn btn-secondary">保存草稿</button>
+                        <div class="mb-3">
+                            <button id="save-post" class="btn btn-primary me-2">发布</button>
+                            <button id="save-draft" class="btn btn-secondary">保存为草稿</button>
                         </div>
                     </div>
                     
-                    <!-- 设置视图 -->
-                    <div id="settings-view" class="content-view d-none">
-                        <h2>网站设置</h2>
-                        <div class="form-group mb-3">
-                            <label for="site-title">网站标题</label>
-                            <input type="text" id="site-title" class="form-control">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="site-description">网站描述</label>
-                            <textarea id="site-description" class="form-control"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <button id="save-settings" class="btn btn-primary">保存设置</button>
+                    <!-- 网站设置视图 -->
+                    <div id="settings-view" class="content-view">
+                        <h2 class="mb-4">网站设置</h2>
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="form-group mb-3">
+                                    <label for="site-title">网站标题</label>
+                                    <input type="text" id="site-title" class="form-control">
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="site-description">网站描述</label>
+                                    <textarea id="site-description" class="form-control"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <button id="save-settings" class="btn btn-primary">保存设置</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
