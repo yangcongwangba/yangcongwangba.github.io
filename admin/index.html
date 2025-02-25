@@ -23,12 +23,20 @@
             
             <div class="space-y-4">
                 <div class="relative">
+                    <label for="githubToken" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        GitHub Token (以 ghp_ 开头)
+                    </label>
                     <input type="password" id="githubToken" 
                         class="w-full px-4 py-2 border rounded-lg pr-10
                         focus:outline-none focus:ring-2 focus:ring-blue-500
                         dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
                         placeholder="ghp_xxxxxxxxxxxx"
-                        autocomplete="off">
+                        autocomplete="off"
+                        pattern="^ghp_[a-zA-Z0-9]{36}$"
+                        required>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Token 格式：ghp_ 开头，后跟 36 个字符
+                    </div>
                     <i class="fas fa-key absolute right-3 top-3 text-gray-400"></i>
                 </div>
                 
