@@ -2,51 +2,35 @@ import config from './config.js';
 
 let token = localStorage.getItem('githubToken');
 
-// 认证
+// 认证函数改进
 async function authenticate() {
-    const tokenInput = document.getElementById('token').value.trim();
-    
-    // 调试信息
-    console.log('开始认证流程');
-    console.log('Token前缀:', tokenInput.substring(0, 4));
-
+    const tokenInput = document.getElementById('githubToken').value.trim();
     if (!tokenInput) {
         showError('请输入 GitHub Token');
         return;
     }
 
     try {
-        // 测试 API 访问
-        const testResponse = await fetch('https://api.github.com/user', {
+        // 直接测试仓库访问权限
+        const response = await fetch(`${config.apiBase}/repos/${config.repo}`, {
             headers: {
-                'Authorization': `token ${tokenInput}`,
-                'Accept': 'application/vnd.github.v3+json'
+                'Authorization': `Bearer ${tokenInput}`,
+                'Accept': config.acceptHeader
             }
         });
 
-        if (testResponse.ok) {
-            const userData = await testResponse.json();
-            console.log('认证成功:', userData.login);
-            
-            // 保存 token 和用户信息
+        if (response.ok) {
             token = tokenInput;
-            localStorage.setItem('githubToken', tokenInput);
-            localStorage.setItem('githubUser', userData.login);
-            
-            // 更新界面
-            document.getElementById('login').classList.add('hidden');
-            document.getElementById('app').classList.remove('hidden');
-            
-            showSuccess(`欢迎回来，${userData.name || userData.login}`);
-            loadPageTypes();
+            localStorage.setItem('githubToken', token);
+            document.getElementById('login').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            showSuccess('登录成功');
+            await loadPageTypes();
         } else {
-            const errorData = await testResponse.json();
-            throw new Error(errorData.message || 'Token 验证失败');
+            throw new Error('Token无效或没有仓库访问权限');
         }
     } catch (error) {
-        console.error('认证错误:', error);
-        showError(`登录失败: ${error.message}`);
-        document.getElementById('token').value = '';
+        showError(`认证失败: ${error.message}`);
     }
 }
 
