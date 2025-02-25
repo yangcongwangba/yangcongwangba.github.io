@@ -23,11 +23,12 @@
             
             <div class="space-y-4">
                 <div class="relative">
-                    <input type="password" id="token" 
+                    <input type="password" id="githubToken" 
                         class="w-full px-4 py-2 border rounded-lg pr-10
                         focus:outline-none focus:ring-2 focus:ring-blue-500
                         dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-                        placeholder="ghp_xxxxxxxxxxxx">
+                        placeholder="ghp_xxxxxxxxxxxx"
+                        autocomplete="off">
                     <i class="fas fa-key absolute right-3 top-3 text-gray-400"></i>
                 </div>
                 
@@ -86,7 +87,7 @@
 
         <!-- GitHub 认证 -->
         <div id="auth" class="fixed bottom-4 right-4 hidden">
-            <input type="password" id="token" placeholder="GitHub Token" class="border p-2 rounded mr-2">
+            <input type="password" id="githubToken" placeholder="GitHub Token" class="border p-2 rounded mr-2">
             <button onclick="authenticate()" class="bg-gray-800 text-white px-4 py-2 rounded">认证</button>
         </div>
     </div>

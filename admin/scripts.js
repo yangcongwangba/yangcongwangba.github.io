@@ -4,30 +4,49 @@ let token = localStorage.getItem('githubToken');
 
 // 认证
 async function authenticate() {
-    const token = document.getElementById('token').value;
-    if (!token?.startsWith('ghp_')) {
-        showError('请输入有效的 Personal Access Token');
+    const tokenInput = document.getElementById('token').value.trim();
+    
+    // 调试信息
+    console.log('开始认证流程');
+    console.log('Token前缀:', tokenInput.substring(0, 4));
+
+    if (!tokenInput) {
+        showError('请输入 GitHub Token');
         return;
     }
 
     try {
-        const response = await fetch(`${config.apiBase}/user`, {
-            headers: { Authorization: `token ${token}` }
+        // 测试 API 访问
+        const testResponse = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `token ${tokenInput}`,
+                'Accept': 'application/vnd.github.v3+json'
+            }
         });
-        
-        if (response.ok) {
-            const user = await response.json();
-            localStorage.setItem('githubToken', token);
-            localStorage.setItem('githubUser', user.login);
-            showSuccess(`欢迎回来，${user.name || user.login}`);
+
+        if (testResponse.ok) {
+            const userData = await testResponse.json();
+            console.log('认证成功:', userData.login);
+            
+            // 保存 token 和用户信息
+            token = tokenInput;
+            localStorage.setItem('githubToken', tokenInput);
+            localStorage.setItem('githubUser', userData.login);
+            
+            // 更新界面
             document.getElementById('login').classList.add('hidden');
             document.getElementById('app').classList.remove('hidden');
+            
+            showSuccess(`欢迎回来，${userData.name || userData.login}`);
             loadPageTypes();
         } else {
-            throw new Error('Token 无效或已过期');
+            const errorData = await testResponse.json();
+            throw new Error(errorData.message || 'Token 验证失败');
         }
     } catch (error) {
-        showError(error.message);
+        console.error('认证错误:', error);
+        showError(`登录失败: ${error.message}`);
+        document.getElementById('token').value = '';
     }
 }
 
@@ -162,7 +181,17 @@ function showStatus(message, type = 'info') {
 }
 
 function showError(message) {
-    showStatus(message, 'error');
+    const status = document.getElementById('status');
+    status.textContent = message;
+    status.className = 'status-message bg-red-500 text-white slide-in';
+    status.classList.remove('hidden');
+    
+    console.error('错误:', message);
+    
+    setTimeout(() => {
+        status.classList.remove('slide-in');
+        status.classList.add('slide-out');
+    }, 3000);
 }
 
 function showSuccess(message) {
@@ -170,7 +199,17 @@ function showSuccess(message) {
 }
 
 // 初始化
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+    console.log('页面加载完成');
+    
+    // 检查已保存的 token
+    const savedToken = localStorage.getItem('githubToken');
+    if (savedToken) {
+        console.log('发现已保存的 token');
+        document.getElementById('token').value = savedToken;
+        await authenticate();
+    }
+    
     // 主题初始化
     if (localStorage.theme === 'dark' || (!localStorage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
