@@ -1,0 +1,34 @@
+# 网站设置
+title: 我的个人博客
+description: 分享技术、生活和创意的个人空间
+baseurl: ""
+url: ""
+
+# 构建设置
+markdown: kramdown
+highlighter: rouge
+permalink: /:year/:month/:day/:title/
+
+# 社交链接
+github_username: your_github_username
+twitter_username: your_twitter_username
+linkedin_username: your_linkedin_username
+
+# 博客设置
+paginate: 6
+paginate_path: "/page:num/"
+
+# 插件
+plugins:
+  - jekyll-paginate
+  - jekyll-feed
+  - jekyll-seo-tag
+
+# 排除文件
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .github
+  - admin 

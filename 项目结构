@@ -1,0 +1,20 @@
+repository-name/
+├── index.html                # 主页
+├── admin/                    # 管理后台
+│   ├── index.html            # 管理后台入口
+│   ├── js/
+│   │   ├── app.js            # 管理后台主应用
+│   │   ├── auth.js           # GitHub认证
+│   │   ├── editor.js         # Markdown编辑器
+│   │   └── api.js            # GitHub API操作
+│   ├── css/
+│   │   └── style.css         # 管理后台样式
+│   └── components/           # 管理后台组件
+├── _posts/                   # 博客文章目录
+├── assets/                   # 资源文件
+│   ├── css/
+│   ├── js/
+│   └── images/
+├── .github/workflows/        # GitHub Actions工作流
+│   └── build-deploy.yml      # 构建和部署工作流
+└── _config.yml               # GitHub Pages配置 
