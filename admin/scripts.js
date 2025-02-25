@@ -1,36 +1,58 @@
 import config from './config.js';
 
-let token = localStorage.getItem('githubToken');
+let token = null; // 重置token变量
 
-// 认证函数改进
+// 认证函数重写
 async function authenticate() {
     const tokenInput = document.getElementById('githubToken').value.trim();
+    console.log('开始认证流程');
+
     if (!tokenInput) {
         showError('请输入 GitHub Token');
         return;
     }
 
     try {
-        // 直接测试仓库访问权限
-        const response = await fetch(`${config.apiBase}/repos/${config.repo}`, {
+        showLoading(true);
+        const response = await fetch('https://api.github.com/user', {
             headers: {
-                'Authorization': `Bearer ${tokenInput}`,
-                'Accept': config.acceptHeader
+                'Authorization': `token ${tokenInput}`,
+                'Accept': 'application/vnd.github.v3+json'
             }
         });
 
-        if (response.ok) {
+        const data = await response.json();
+        
+        if (response.ok && data) {
+            console.log('认证成功');
             token = tokenInput;
             localStorage.setItem('githubToken', token);
-            document.getElementById('login').style.display = 'none';
-            document.getElementById('app').style.display = 'block';
-            showSuccess('登录成功');
+            localStorage.setItem('githubUser', data.login);
+            
+            // 显示主界面
+            document.getElementById('login').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            showSuccess(`欢迎回来，${data.name || data.login}`);
             await loadPageTypes();
         } else {
-            throw new Error('Token无效或没有仓库访问权限');
+            throw new Error(data.message || 'Token验证失败');
         }
     } catch (error) {
-        showError(`认证失败: ${error.message}`);
+        console.error('认证错误:', error);
+        showError(error.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// 添加加载状态控制
+function showLoading(show) {
+    const loginButton = document.querySelector('#loginBtn');
+    if (loginButton) {
+        loginButton.disabled = show;
+        loginButton.innerHTML = show ? 
+            '<i class="fas fa-spinner fa-spin mr-2"></i>登录中...' : 
+            '<i class="fas fa-sign-in-alt mr-2"></i>登录';
     }
 }
 
@@ -146,10 +168,46 @@ async function processTemplate(content) {
     });
 }
 
-// 主题切换
+// 增强的主题切换函数
 function toggleTheme() {
-    document.documentElement.classList.toggle('dark');
-    localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    const isDark = document.documentElement.classList.toggle('dark');
+    document.documentElement.classList.toggle('light', !isDark);
+    localStorage.theme = isDark ? 'dark' : 'light';
+    
+    // 更新图标
+    const icon = document.querySelector('#themeToggle i');
+    icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+    
+    // 触发系统主题色变化
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+        'content',
+        isDark ? '#1f2937' : '#ffffff'
+    );
+}
+
+// 增强的主题初始化
+function initializeTheme() {
+    // 检查存储的主题设置
+    const savedTheme = localStorage.theme;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // 设置初始主题
+    const isDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+    document.documentElement.classList.toggle('dark', isDark);
+    document.documentElement.classList.toggle('light', !isDark);
+    
+    // 更新图标
+    const icon = document.querySelector('#themeToggle i');
+    if (icon) {
+        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+    }
+    
+    // 监听系统主题变化
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.theme) { // 只在没有手动设置主题时响应
+            toggleTheme();
+        }
+    });
 }
 
 // 美化的状态提示
@@ -195,9 +253,7 @@ window.addEventListener('load', async () => {
     }
     
     // 主题初始化
-    if (localStorage.theme === 'dark' || (!localStorage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-    }
+    initializeTheme();
     
     // 登录状态检查
     const token = localStorage.getItem('githubToken');
