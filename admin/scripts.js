@@ -4,29 +4,30 @@ let token = localStorage.getItem('githubToken');
 
 // 认证
 async function authenticate() {
-    token = document.getElementById('token').value;
-    if (!token) {
-        alert('请输入 GitHub API Key');
+    const token = document.getElementById('token').value;
+    if (!token?.startsWith('ghp_')) {
+        showError('请输入有效的 Personal Access Token');
         return;
     }
 
     try {
-        const response = await fetch(`https://api.github.com/repos/${config.repo}`, {
+        const response = await fetch(`${config.apiBase}/user`, {
             headers: { Authorization: `token ${token}` }
         });
         
         if (response.ok) {
+            const user = await response.json();
             localStorage.setItem('githubToken', token);
-            document.getElementById('auth').classList.add('hidden');
-            document.getElementById('app').classList.remove('opacity-50');
+            localStorage.setItem('githubUser', user.login);
+            showSuccess(`欢迎回来，${user.name || user.login}`);
+            document.getElementById('login').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
             loadPageTypes();
-            showStatus('登录成功！');
         } else {
-            throw new Error('API Key 无效');
+            throw new Error('Token 无效或已过期');
         }
     } catch (error) {
-        alert(`登录失败: ${error.message}`);
-        document.getElementById('token').value = '';
+        showError(error.message);
     }
 }
 
@@ -142,11 +143,47 @@ async function processTemplate(content) {
     });
 }
 
+// 主题切换
+function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+}
+
+// 美化的状态提示
+function showStatus(message, type = 'info') {
+    const status = document.getElementById('status');
+    status.textContent = message;
+    status.className = `status-message ${type === 'error' ? 'bg-red-500' : 'bg-blue-500'} text-white slide-in`;
+    
+    setTimeout(() => {
+        status.classList.remove('slide-in');
+        status.classList.add('slide-out');
+    }, 3000);
+}
+
+function showError(message) {
+    showStatus(message, 'error');
+}
+
+function showSuccess(message) {
+    showStatus(message, 'success');
+}
+
 // 初始化
 window.addEventListener('load', () => {
-    if (token) {
-        loadPageTypes();
+    // 主题初始化
+    if (localStorage.theme === 'dark' || (!localStorage.theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
     }
+    
+    // 登录状态检查
+    const token = localStorage.getItem('githubToken');
+    if (token) {
+        authenticate();
+    }
+    
+    // 绑定主题切换
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 });
 
 // 导出全局函数

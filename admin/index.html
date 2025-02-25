@@ -3,11 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>洋葱王八 - GitHub Pages 管理后台</title>
+    <title>洋葱王八 - 管理后台</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-100">
-    <div id="app" class="container mx-auto p-4">
+<body class="bg-gray-50 dark:bg-gray-900">
+    <!-- 登录界面 -->
+    <div id="login" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+            <div class="text-center mb-8">
+                <div class="mb-4 relative">
+                    <img src="https://api.dicebear.com/7.x/initials/svg?seed=YW" alt="Logo" 
+                        class="w-20 h-20 mx-auto rounded-full bg-blue-100 p-2">
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">管理后台</h2>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">使用 GitHub Token 登录</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="relative">
+                    <input type="password" id="token" 
+                        class="w-full px-4 py-2 border rounded-lg pr-10
+                        focus:outline-none focus:ring-2 focus:ring-blue-500
+                        dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+                        placeholder="ghp_xxxxxxxxxxxx">
+                    <i class="fas fa-key absolute right-3 top-3 text-gray-400"></i>
+                </div>
+                
+                <button onclick="authenticate()" 
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold
+                    py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                    <i class="fas fa-sign-in-alt mr-2"></i>登录
+                </button>
+                
+                <div class="text-sm text-center">
+                    <a href="https://github.com/settings/tokens" target="_blank"
+                        class="text-blue-500 hover:text-blue-600">
+                        <i class="fas fa-question-circle mr-1"></i>
+                        如何获取 Token?
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app" class="container mx-auto p-4 hidden">
         <!-- 站点信息 -->
         <div class="mb-8 text-center">
             <h1 class="text-2xl font-bold">洋葱王八 - GitHub Pages 管理后台</h1>
@@ -44,7 +85,7 @@
         </div>
 
         <!-- GitHub 认证 -->
-        <div id="auth" class="fixed bottom-4 right-4">
+        <div id="auth" class="fixed bottom-4 right-4 hidden">
             <input type="password" id="token" placeholder="GitHub Token" class="border p-2 rounded mr-2">
             <button onclick="authenticate()" class="bg-gray-800 text-white px-4 py-2 rounded">认证</button>
         </div>
@@ -53,6 +94,13 @@
     <!-- 状态提示 -->
     <div id="status" class="fixed bottom-4 left-4 bg-gray-800 text-white px-4 py-2 rounded hidden"></div>
     
+    <!-- 主题切换按钮 -->
+    <button id="themeToggle" 
+        class="fixed top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700
+        text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600">
+        <i class="fas fa-moon dark:fa-sun"></i>
+    </button>
+
     <script type="module" src="scripts.js"></script>
 </body>
 </html>
