@@ -18,16 +18,14 @@ jobs:
         with:
           ruby-version: '3.0'
           bundler-cache: true
-          
+      
       - name: Install Dependencies
         run: |
-          gem install jekyll bundler
-          bundle init
-          bundle add jekyll
-          bundle install
+          bundle install || (bundle update && bundle install)
           
       - name: Build Site
-        run: bundle exec jekyll build
+        run: |
+          bundle exec jekyll build
         env:
           JEKYLL_ENV: production
           
