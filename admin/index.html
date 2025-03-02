@@ -21,5 +21,34 @@
     <script src="../config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
+    
+    <!-- 添加初始检查脚本 -->
+    <script>
+    // 页面加载时检查登录状态
+    document.addEventListener('DOMContentLoaded', function() {
+        // 检查是否为登录回调
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        
+        if (code) {
+            // 正在处理OAuth回调，auth.js会处理
+            console.log('检测到OAuth回调，等待处理...');
+            return;
+        }
+        
+        // 检查是否已经登录
+        const token = localStorage.getItem(siteConfig.github.tokenStorageKey);
+        if (token) {
+            // 已有Token，显示管理面板
+            console.log('检测到现有Token，正在验证...');
+            // auth.js的initAuth会处理验证和显示
+        } else {
+            // 未登录，显示登录选项
+            console.log('未检测到Token，显示登录选项');
+            document.getElementById('login-container').classList.remove('hidden');
+            document.getElementById('admin-panel').classList.add('hidden');
+        }
+    });
+    </script>
 </body>
 </html> 

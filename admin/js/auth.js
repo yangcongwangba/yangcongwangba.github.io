@@ -69,39 +69,38 @@ async function handleTokenLogin() {
 // 验证Token
 async function validateToken(token) {
     try {
-        const response = await fetch(`${siteConfig.github.apiBaseUrl}/user`, {
+        const response = await fetch('https://api.github.com/user', {
             headers: {
                 'Authorization': `token ${token}`
             }
         });
         
         if (response.ok) {
-            // Token有效，保存并显示管理面板
             const userData = await response.json();
+            // 存储用户信息
+            const username = userData.login;
+            localStorage.setItem('github_username', username);
+            localStorage.setItem(siteConfig.github.tokenStorageKey, token);
             
-            // 如果是手动输入的Token，保存它
-            if (tokenFromInput === token) {
-                localStorage.setItem(siteConfig.github.tokenStorageKey, token);
-            }
+            // 显示管理界面
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('admin-panel').classList.remove('hidden');
             
-            localStorage.setItem('github_username', userData.login);
-            showAdminPanel();
-        } else {
-            // Token无效
-            if (tokenFromInput === token) {
-                alert('Token无效或没有足够的权限，请确保Token具有repo权限');
-                tokenFromInput = '';
+            // 初始化管理界面
+            if (typeof initAdminPanel === 'function') {
+                initAdminPanel(username, siteConfig.github.repoName, token);
             } else {
-                // 已保存的Token无效，清除它
-                localStorage.removeItem(siteConfig.github.tokenStorageKey);
-                // 显示登录界面
-                document.getElementById('login-container').classList.remove('hidden');
-                document.getElementById('admin-panel').classList.add('hidden');
+                console.error('initAdminPanel函数未定义，请检查admin.js是否正确加载');
             }
+            
+            return true;
+        } else {
+            throw new Error('Token验证失败');
         }
     } catch (error) {
-        console.error('验证Token失败:', error);
-        alert('验证Token失败，请重试');
+        console.error('验证Token时出错:', error);
+        alert('验证Token失败，请检查Token是否有效');
+        return false;
     }
 }
 
@@ -127,12 +126,21 @@ async function exchangeCodeForToken(code) {
         
         const data = await response.json();
         if (data.access_token) {
-            localStorage.setItem(siteConfig.github.tokenStorageKey, data.access_token);
-            showAdminPanel();
+            const token = data.access_token;
+            localStorage.setItem(siteConfig.github.tokenStorageKey, token);
+            
+            // 清除URL中的code参数
+            const url = new URL(window.location.href);
+            url.searchParams.delete('code');
+            window.history.replaceState({}, document.title, url.toString());
+            
+            // 直接初始化管理面板，而不是刷新页面
+            validateToken(token);
         }
     } catch (error) {
-        console.error('认证失败:', error);
-        alert('GitHub认证失败，请重试或尝试使用Token登录');
+        console.error('交换Code获取Token失败:', error);
+        // 显示错误信息而不是刷新页面
+        alert('登录失败，请重试');
     }
 }
 

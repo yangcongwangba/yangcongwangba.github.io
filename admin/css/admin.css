@@ -89,4 +89,124 @@
 
 .github-button:hover {
     background-color: #1c2024;
+}
+
+/* 修复显示/隐藏状态 */
+.hidden {
+    display: none !important;
+}
+
+/* 管理面板样式完善 */
+#admin-panel {
+    padding: 20px;
+}
+
+.welcome-message {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid #0366d6;
+}
+
+.admin-menu {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    padding: 8px 15px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #333;
+}
+
+.menu-btn:hover {
+    color: #0366d6;
+}
+
+.menu-btn.active {
+    color: #0366d6;
+    font-weight: bold;
+    border-bottom: 2px solid #0366d6;
+}
+
+.main-content {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 20px;
+    min-height: 400px;
+}
+
+/* Token输入样式优化 */
+.token-input-container {
+    margin: 20px 0;
+}
+
+.token-input-container input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+/* 添加响应式设计 */
+@media (max-width: 768px) {
+    .admin-menu {
+        flex-direction: column;
+    }
+    
+    .menu-btn {
+        margin-bottom: 5px;
+        text-align: left;
+    }
+}
+
+/* 通知样式 */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: opacity 0.5s;
+}
+
+.notification.info {
+    background-color: #3498db;
+}
+
+.notification.success {
+    background-color: #2ecc71;
+}
+
+.notification.error {
+    background-color: #e74c3c;
+}
+
+.notification.warning {
+    background-color: #f39c12;
+}
+
+.notification.fade-out {
+    opacity: 0;
+}
+
+/* 错误信息样式 */
+.error {
+    color: #e74c3c;
+    padding: 10px;
+    border-left: 4px solid #e74c3c;
+    background-color: rgba(231, 76, 60, 0.1);
 } 
