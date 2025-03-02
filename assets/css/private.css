@@ -1,0 +1,178 @@
+/* 私密内容页面样式 */
+.auth-container {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: var(--card-background);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px var(--shadow-color);
+}
+
+.help-text {
+    font-size: 0.9rem;
+    color: var(--muted-text-color);
+    margin-top: 0.5rem;
+}
+
+.private-content {
+    margin-top: 2rem;
+}
+
+#repo-selector {
+    margin-bottom: 1.5rem;
+}
+
+#repo-selector select {
+    width: 100%;
+    max-width: 300px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--card-background);
+    color: var(--text-color);
+}
+
+.private-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.private-items li {
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    background-color: var(--card-background);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.private-items li:hover {
+    background-color: var(--code-background);
+}
+
+.folder-icon, .file-icon {
+    margin-right: 10px;
+    font-size: 1.2rem;
+}
+
+.path-nav {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background-color: var(--card-background);
+    border-radius: 4px;
+}
+
+.path-item {
+    color: var(--link-color);
+    cursor: pointer;
+}
+
+.path-item:hover {
+    text-decoration: underline;
+}
+
+.path-item.current {
+    color: var(--text-color);
+    cursor: default;
+}
+
+.content-viewer {
+    margin-top: 2rem;
+}
+
+.content-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.text-btn {
+    background: none;
+    border: none;
+    color: var(--link-color);
+    cursor: pointer;
+    padding: 5px 0;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.text-btn:hover {
+    text-decoration: underline;
+}
+
+.meta-item {
+    display: inline-block;
+    margin-right: 1rem;
+    color: var(--muted-text-color);
+}
+
+.tags-container {
+    margin-top: 0.5rem;
+}
+
+.tag {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    background-color: var(--code-background);
+    border-radius: 3px;
+    font-size: 0.9rem;
+    color: var(--muted-text-color);
+}
+
+.markdown-body {
+    line-height: 1.8;
+}
+
+.markdown-body h1, 
+.markdown-body h2, 
+.markdown-body h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.markdown-body p {
+    margin-bottom: 1rem;
+}
+
+.markdown-body ul {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.markdown-body img {
+    max-width: 100%;
+    height: auto;
+    margin: 1rem 0;
+}
+
+.markdown-body code {
+    background-color: var(--code-background);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.markdown-body pre {
+    background-color: var(--code-background);
+    padding: 1rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.markdown-body pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+.error-message {
+    color: #e74c3c;
+    text-align: center;
+    padding: 1rem;
+} 

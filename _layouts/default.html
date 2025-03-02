@@ -1,12 +1,15 @@
+<!--
+  Template: 默认文章模板
+  Description: 基础的文章布局
+-->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的GitHub Pages博客</title>
-    <link rel="stylesheet" href="assets/css/main.css">
-    <!-- 主题样式将根据用户偏好动态加载 -->
-    <link rel="stylesheet" href="assets/css/theme-light.css" id="theme-css">
+    <title>{{ page.title }} - 我的博客</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/theme-light.css" id="theme-css">
 </head>
 <body class="theme-light">
     <header class="site-header">
@@ -16,7 +19,7 @@
             </div>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="/" class="active" data-i18n="home">首页</a></li>
+                    <li><a href="/" data-i18n="home">首页</a></li>
                     <li><a href="/archives" data-i18n="archives">归档</a></li>
                     <li><a href="/about" data-i18n="about">关于</a></li>
                 </ul>
@@ -33,20 +36,31 @@
 
     <main class="site-content">
         <div class="container">
-            <section class="featured-posts">
-                <h2 class="section-title" data-i18n="featured_posts">精选文章</h2>
-                <div class="posts-grid" id="featured-posts-container">
-                    <!-- 内容将通过JavaScript动态加载 -->
-                    <div class="loading-indicator">加载中...</div>
+            <article class="post">
+                <header class="post-header">
+                    <h1 class="post-title">{{ page.title }}</h1>
+                    <div class="post-meta">
+                        <span class="post-date">{{ page.date }}</span>
+                    </div>
+                </header>
+                
+                <div class="post-content">
+                    {{ content }}
                 </div>
-            </section>
+                
+                <footer class="post-footer">
+                    <div class="post-tags">
+                        {% if page.tags %}
+                        {% for tag in page.tags %}
+                        <a href="/tags/{{ tag }}" class="post-tag">{{ tag }}</a>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </footer>
+            </article>
             
-            <section class="recent-posts">
-                <h2 class="section-title" data-i18n="recent_posts">最新文章</h2>
-                <div class="posts-list" id="recent-posts-container">
-                    <!-- 内容将通过JavaScript动态加载 -->
-                    <div class="loading-indicator">加载中...</div>
-                </div>
+            <section class="post-comments">
+                <div id="comments-container" data-issue-id="{{ page.comments_id }}"></div>
             </section>
         </div>
     </main>
@@ -61,11 +75,10 @@
     </footer>
 
     <!-- 脚本加载 -->
-    <script src="assets/js/theme.js"></script>
-    <script src="assets/js/i18n.js"></script>
-    <script src="assets/js/posts-loader.js"></script>
+    <script src="/assets/js/theme.js"></script>
+    <script src="/assets/js/i18n.js"></script>
+    <script src="/assets/js/comments.js"></script>
     <script>
-        // 设置页脚年份
         document.getElementById('current-year').textContent = new Date().getFullYear();
     </script>
 </body>

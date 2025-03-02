@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的GitHub Pages博客</title>
+    <title>私密内容 - 我的博客</title>
     <link rel="stylesheet" href="assets/css/main.css">
-    <!-- 主题样式将根据用户偏好动态加载 -->
     <link rel="stylesheet" href="assets/css/theme-light.css" id="theme-css">
+    <link rel="stylesheet" href="assets/css/private.css">
 </head>
 <body class="theme-light">
     <header class="site-header">
@@ -16,7 +16,7 @@
             </div>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="/" class="active" data-i18n="home">首页</a></li>
+                    <li><a href="/" data-i18n="home">首页</a></li>
                     <li><a href="/archives" data-i18n="archives">归档</a></li>
                     <li><a href="/about" data-i18n="about">关于</a></li>
                 </ul>
@@ -33,21 +33,35 @@
 
     <main class="site-content">
         <div class="container">
-            <section class="featured-posts">
-                <h2 class="section-title" data-i18n="featured_posts">精选文章</h2>
-                <div class="posts-grid" id="featured-posts-container">
-                    <!-- 内容将通过JavaScript动态加载 -->
-                    <div class="loading-indicator">加载中...</div>
+            <!-- 认证部分 -->
+            <div id="auth-container" class="auth-container">
+                <h2>访问私密内容</h2>
+                <p>请输入访问令牌 (Token) 来查看私密内容</p>
+                <div class="token-input-group">
+                    <input type="password" id="private-token" placeholder="输入GitHub Token">
+                    <button id="access-btn" class="primary-btn">访问</button>
                 </div>
-            </section>
+                <p class="help-text">需要具有私密仓库访问权限的GitHub Token</p>
+            </div>
             
-            <section class="recent-posts">
-                <h2 class="section-title" data-i18n="recent_posts">最新文章</h2>
-                <div class="posts-list" id="recent-posts-container">
-                    <!-- 内容将通过JavaScript动态加载 -->
+            <!-- 私密内容列表 -->
+            <div id="private-content" class="private-content hidden">
+                <h2>私密内容</h2>
+                <div id="repo-selector"></div>
+                <div id="private-items-container">
                     <div class="loading-indicator">加载中...</div>
                 </div>
-            </section>
+            </div>
+            
+            <!-- 内容查看区域 -->
+            <div id="content-viewer" class="content-viewer hidden">
+                <div class="content-header">
+                    <button id="back-to-list" class="text-btn">← 返回列表</button>
+                    <h1 id="content-title">文章标题</h1>
+                    <div id="content-meta"></div>
+                </div>
+                <div id="content-body" class="markdown-body"></div>
+            </div>
         </div>
     </main>
 
@@ -61,11 +75,11 @@
     </footer>
 
     <!-- 脚本加载 -->
+    <script src="config.js"></script>
     <script src="assets/js/theme.js"></script>
     <script src="assets/js/i18n.js"></script>
-    <script src="assets/js/posts-loader.js"></script>
+    <script src="assets/js/private-content.js"></script>
     <script>
-        // 设置页脚年份
         document.getElementById('current-year').textContent = new Date().getFullYear();
     </script>
 </body>
