@@ -258,5 +258,6 @@ def build_site():
     
     print("站点构建完成！")
 
+
 if __name__ == "__main__":
-    build_site() 
+    build_site()
