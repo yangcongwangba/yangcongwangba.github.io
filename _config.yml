@@ -3,14 +3,14 @@ title: 我的GitHub博客
 description: 基于GitHub Pages的个人博客
 author: 您的名字
 baseurl: ""
-url: "https://你的用户名.github.io"
+url: "https://yangcongwangba.github.io"
 
 # 博客设置
 permalink: /:year/:month/:day/:title.html
 paginate: 10
 
 # 主题设置
-theme: light
+theme: minima
 allow_theme_switch: true
 
 # 语言设置
