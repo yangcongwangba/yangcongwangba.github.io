@@ -1,37 +1,50 @@
 {
-  "name": "github-pages-blog",
-  "version": "1.0.0",
+  "name": "github-pages-react-site",
+  "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "export": "next build && next export",
-    "lint": "next lint"
-  },
+  "homepage": ".",
   "dependencies": {
-    "@chakra-ui/react": "^2.8.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.14.3",
+    "@mui/material": "^5.14.3",
     "@octokit/rest": "^19.0.13",
-    "framer-motion": "^10.15.1",
-    "next": "^13.4.13",
+    "@uiw/react-md-editor": "^3.23.5",
+    "axios": "^1.4.0",
+    "i18next": "^23.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-icons": "^4.10.1",
-    "react-markdown": "^8.0.7",
-    "swr": "^2.2.0",
-    "gray-matter": "^4.0.3",
-    "dayjs": "^1.11.9",
-    "js-cookie": "^3.0.5"
+    "react-i18next": "^13.0.3",
+    "react-router-dom": "^6.14.2",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "devDependencies": {
-    "@types/node": "^20.4.8",
-    "@types/react": "^18.2.18",
-    "@types/react-dom": "^18.2.7",
-    "typescript": "^5.1.6",
-    "eslint": "^8.46.0",
-    "eslint-config-next": "^13.4.13",
-    "@types/js-cookie": "^3.0.3"
+    "gh-pages": "^5.0.0"
   }
-} 
+}

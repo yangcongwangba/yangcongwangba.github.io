@@ -1,0 +1,73 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "error": "发生错误",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "search": "搜索",
+    "submit": "提交",
+    "back": "返回"
+  },
+  "nav": {
+    "home": "首页",
+    "blog": "博客",
+    "about": "关于",
+    "admin": "管理",
+    "login": "登录",
+    "logout": "退出"
+  },
+  "home": {
+    "welcome": "欢迎访问GitHub Pages React网站",
+    "description": "一个使用React和GitHub Pages构建的现代化网站"
+  },
+  "login": {
+    "title": "登录",
+    "withToken": "使用GitHub Token登录",
+    "withOAuth": "使用GitHub账号登录",
+    "tokenPlaceholder": "输入您的GitHub token",
+    "loginButton": "登录",
+    "tokenHelp": "您可以在GitHub设置中生成个人访问令牌"
+  },
+  "admin": {
+    "title": "管理后台",
+    "welcome": "欢迎使用管理后台",
+    "contentManager": "内容管理",
+    "newContent": "新建内容",
+    "contentList": "内容列表",
+    "settings": "设置"
+  },
+  "editor": {
+    "title": "内容编辑器",
+    "titlePlaceholder": "输入标题",
+    "contentPlaceholder": "在这里编写内容...",
+    "metadataTitle": "元数据",
+    "publishButton": "发布",
+    "saveDraftButton": "保存草稿",
+    "previewButton": "预览",
+    "templateSelect": "选择模板",
+    "uploadImage": "上传图片",
+    "uploadFile": "上传文件"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "theme": "主题",
+    "darkMode": "暗色模式",
+    "lightMode": "亮色模式"
+  },
+  "notFound": {
+    "title": "页面未找到",
+    "message": "您访问的页面不存在",
+    "backHome": "返回首页"
+  },
+  "comments": {
+    "title": "评论",
+    "writeComment": "写评论",
+    "submitComment": "提交",
+    "noComments": "暂无评论",
+    "loginToComment": "登录后评论"
+  }
+}

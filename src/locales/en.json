@@ -1,0 +1,73 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "submit": "Submit",
+    "back": "Back"
+  },
+  "nav": {
+    "home": "Home",
+    "blog": "Blog",
+    "about": "About",
+    "admin": "Admin",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "home": {
+    "welcome": "Welcome to GitHub Pages React Site",
+    "description": "A modern website built with React and GitHub Pages"
+  },
+  "login": {
+    "title": "Login",
+    "withToken": "Login with GitHub Token",
+    "withOAuth": "Login with GitHub",
+    "tokenPlaceholder": "Enter your GitHub token",
+    "loginButton": "Login",
+    "tokenHelp": "You can generate a personal access token in your GitHub settings"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "welcome": "Welcome to the admin dashboard",
+    "contentManager": "Content Manager",
+    "newContent": "New Content",
+    "contentList": "Content List",
+    "settings": "Settings"
+  },
+  "editor": {
+    "title": "Content Editor",
+    "titlePlaceholder": "Enter title",
+    "contentPlaceholder": "Write your content here...",
+    "metadataTitle": "Metadata",
+    "publishButton": "Publish",
+    "saveDraftButton": "Save as Draft",
+    "previewButton": "Preview",
+    "templateSelect": "Select template",
+    "uploadImage": "Upload Image",
+    "uploadFile": "Upload File"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
+  },
+  "notFound": {
+    "title": "Page Not Found",
+    "message": "The page you are looking for does not exist",
+    "backHome": "Back to Home"
+  },
+  "comments": {
+    "title": "Comments",
+    "writeComment": "Write a comment",
+    "submitComment": "Submit",
+    "noComments": "No comments yet",
+    "loginToComment": "Login to comment"
+  }
+}
